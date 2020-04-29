@@ -13,6 +13,14 @@ namespace Simple.HttpClientFactory
 
         IHttpClientBuilder WithConnectionTimeout(in TimeSpan connectionTimeout);
 
+        #if NETCOREAPP2_1
+
+        HttpClient Build(Action<SocketsHttpHandler> clientHandlerConfigurator = null);
+
+        #else
+
         HttpClient Build(Action<HttpClientHandler> clientHandlerConfigurator = null);
+
+        #endif
     }
 }

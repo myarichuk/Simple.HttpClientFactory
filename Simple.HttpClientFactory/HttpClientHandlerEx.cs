@@ -10,7 +10,6 @@ namespace Simple.HttpClientFactory
 {
     public class HttpClientHandlerEx : HttpClientHandler
     {
-        private const int MAX_CONNECTION_PER_SERVER = 20;
         private static readonly TimeSpan ConnectionLifeTime = TimeSpan.FromMinutes(1);
 
         private readonly HashSet<EndpointCacheKey> _endpoints = new HashSet<EndpointCacheKey>();
