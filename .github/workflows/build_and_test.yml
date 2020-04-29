@@ -17,7 +17,7 @@ jobs:
         dotnet-version: 3.1.101
     - name: Generate certificate for SSL tests     
       run: |
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./localhost.key -password pass:"" -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -out ./localhost.crt -config ./localhost.conf
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./localhost.key -passin pass: -passout pass: -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -out ./localhost.crt -config ./localhost.conf
         openssl pkcs12 -export -out ./localhost.pfx -inkey ./localhost.key -in ./localhost.crt
         sudo cp ./localhost.crt /usr/local/share/ca-certificates
         sudo update-ca-certificates
