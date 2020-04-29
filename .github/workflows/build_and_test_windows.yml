@@ -10,6 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+    - timeout-minutes: 5
     - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1.4.0
@@ -19,9 +20,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release
-    - name: Setup dev certificate
+    - name: Ensure dev certificate
       run: dotnet dev-certs https    
-    - name: Trust dev certificate
-      run: dotnet dev-certs https --trust
     - name: Test
-      run: dotnet test --verbosity normal
+      run: dotnet test --verbosity normal      
