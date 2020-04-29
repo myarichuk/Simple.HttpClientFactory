@@ -8,7 +8,10 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]    
     steps:
     - timeout-minutes: 5
     - uses: actions/checkout@v2
@@ -19,8 +22,8 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release
-    - name: Ensure dev certificate
+      run: dotnet build --configuration Release --no-restore
+    - name: Ensure dev-certs for https
       run: dotnet dev-certs https    
     - name: Test
-      run: dotnet test --verbosity normal      
+      run: dotnet test --no-restore --verbosity normal   
