@@ -8,22 +8,16 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
-    - timeout-minutes: 5
     - uses: actions/checkout@v2
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1.4.0
+      uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
-    - name: Ensure dev-certs for https
-      run: dotnet dev-certs https    
     - name: Test
-      run: dotnet test --no-restore --verbosity normal   
+      run: dotnet test --no-restore --verbosity normal
