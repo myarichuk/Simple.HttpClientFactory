@@ -1,12 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
+  <PropertyGroup>
+    <UserSecretsId>b7cd72c5-d465-41ff-bd0a-fcd61802b52f</UserSecretsId>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-      <TargetFrameworks>netcoreapp3.1;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;netcoreapp2.0</TargetFrameworks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' "> 
-      <TargetFrameworks>netcoreapp3.1;netcoreapp2.0;net472</TargetFrameworks>
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+    <TargetFrameworks>netcoreapp3.1;netcoreapp2.0;net472</TargetFrameworks>
   </PropertyGroup>
-  
   <ItemGroup>
     <PackageReference Include="Flurl" Version="2.8.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
@@ -21,9 +23,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Simple.HttpClientFactory\Simple.HttpClientFactory.csproj" />
   </ItemGroup>
-
 </Project>
