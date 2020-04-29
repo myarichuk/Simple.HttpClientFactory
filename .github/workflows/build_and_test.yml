@@ -8,16 +8,21 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-        matrix:
-          os: [windows-latest, ubuntu-latest]    
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
+    - name: Generate certificate for SSL tests     
+      run: |
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./localhost.key -out ./localhost.crt -config ./Simple.HttpClientFactory.Tests/CertStuff/localhost.conf
+        openssl pkcs12 -export -out ./localhost.pfx -inkey ./localhost.key -in ./localhost.crt
+        sudo cp ./localhost.crt /usr/local/share/ca-certificates
+        sudo update-ca-certificates
+        openssl verify localhost.crt
+        dotnet user-secrets --project ./Simple.HttpClientFactory.Tests/Simple.HttpClientFactory.Tests.csproj set "Kestrel:Certificates:Default:Path" "localhost.pfx"
+        dotnet user-secrets --project ./Simple.HttpClientFactory.Tests/Simple.HttpClientFactory.Tests.csproj set "Kestrel:Certificates:Default:Password" ""
     - name: Install dependencies
       run: dotnet restore
     - name: Build
