@@ -39,17 +39,14 @@ namespace Simple.HttpClientFactory
             var clientHandler = new HttpClientHandlerEx();
             
             if(_certificates.Count > 0)
-            {
                 clientHandler.ClientCertificates.AddRange(_certificates.ToArray());
-            }
+            
             clientHandlerConfigurator?.Invoke(clientHandler);
 
             for(int i = 0; i < _policies.Count; i++)
             {
                 if(policyHandler == null)
-                {
                     policyHandler = new PolicyHttpMessageHandler(_policies[i], clientHandler);
-                }
                 else
                 {
                     var @new = new PolicyHttpMessageHandler(_policies[i], policyHandler);
