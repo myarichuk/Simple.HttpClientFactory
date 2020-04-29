@@ -1,0 +1,3 @@
+[submodule "external/StandardSocketsHttpHandler"]
+	path = external/StandardSocketsHttpHandler
+	url = https://github.com/TalAloni/StandardSocketsHttpHandler.git

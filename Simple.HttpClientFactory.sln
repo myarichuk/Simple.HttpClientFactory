@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple.HttpClientFactory", "Simple.HttpClientFactory\Simple.HttpClientFactory.csproj", "{709E1EB5-F770-4569-B08A-7867035217F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simple.HttpClientFactory", "Simple.HttpClientFactory\Simple.HttpClientFactory.csproj", "{709E1EB5-F770-4569-B08A-7867035217F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple.HttpClientFactory.Tests", "Simple.HttpClientFactory.Tests\Simple.HttpClientFactory.Tests.csproj", "{633729F3-C736-4968-AE6F-07434526CCD1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simple.HttpClientFactory.Tests", "Simple.HttpClientFactory.Tests\Simple.HttpClientFactory.Tests.csproj", "{633729F3-C736-4968-AE6F-07434526CCD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
