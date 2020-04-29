@@ -18,7 +18,7 @@ jobs:
     - name: Generate certificate for SSL tests     
       run: |
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./localhost.key -passin pass:"" -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -out ./localhost.crt -config ./localhost.conf
-        openssl pkcs12 -export -out ./localhost.pfx -inkey ./localhost.key -in ./localhost.crt
+        openssl pkcs12 -export -out ./localhost.pfx -inkey ./localhost.key -in ./localhost.crt -passout pass:""
         sudo cp ./localhost.crt /usr/local/share/ca-certificates
         sudo update-ca-certificates
         openssl verify localhost.crt
