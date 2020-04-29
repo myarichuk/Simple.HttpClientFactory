@@ -9,8 +9,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    timeout-minutes: 5    
     steps:
-    - timeout-minutes: 5
     - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1.4.0
