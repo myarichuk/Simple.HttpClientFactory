@@ -28,11 +28,12 @@ jobs:
         sudo update-ca-certificates
         sudo cp ./localhost.pfx /usr/local/share/ca-certificates
         openssl verify localhost.crt
-        set-env ASPNETCORE_Kestrel__Certificates__Default__Path "/usr/local/share/ca-certificates/localhost.pfx"
-        set-env ASPNETCORE_Kestrel__Certificates__Default__Password "1234"
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore
+      env:
+        ASPNETCORE_Kestrel__Certificates__Default__Path: "/usr/local/share/ca-certificates/localhost.pfx"
+        ASPNETCORE_Kestrel__Certificates__Default__Password: "1234"
