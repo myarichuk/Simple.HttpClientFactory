@@ -53,7 +53,7 @@ namespace Simple.HttpClientFactory.Tests
                               .RetryAsync(3))
                 .Build();
 
-        [Fact]
+        [Fact(Skip = "Requires local certificate setup")]
         public async Task Can_do_https_get_with_plain_client()
         {
             var client = CreateClient();
@@ -63,7 +63,7 @@ namespace Simple.HttpClientFactory.Tests
             Assert.Equal("Hello world!", await response.Content.ReadAsStringAsync());
         }
 
-        [Fact]
+        [Fact(Skip = "Requires local certificate setup")]
         public async Task Can_do_https_post_with_plain_client()
         {
             var client = CreateClient();
