@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 jobs:
-  publish:
+  publish-nuget:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout from git
@@ -44,8 +44,9 @@ jobs:
       run: find . -name *.nupkg -type f -print0 | xargs -0 -I pkg dotnet nuget push pkg -k $nuget_api_key -s "https://api.nuget.org/v3/index.json" --skip-duplicate
       env:
         nuget_api_key: ${{ secrets.NUGET_API_KEY }}    
-        
-    - uses: avakar/tag-and-release@v1
+     
+    - name: Set version tag
+      uses: avakar/tag-and-release@v1
       with:
           release_name: Release v"${{ steps.gitversion.outputs.NuGetVersionV2 }}"
           tag_name: "${{ steps.gitversion.outputs.NuGetVersionV2 }}"
