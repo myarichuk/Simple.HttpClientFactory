@@ -1,6 +1,8 @@
 name: NuGet
 
 on:
+  push:
+    branches: [ master ]
   create:
     tags: 
       -*
@@ -22,13 +24,18 @@ jobs:
 
     - name: Run unit tests
       run: dotnet test --configuration Release
+      
+    - name: Fetch tags for GitVersion
+      run: git fetch --tags
 
-    - name: Generate build number
-      id: buildnumber
-      uses: einaregilsson/build-number@v2 
-      with:
-        token: ${{secrets.github_token}}        
+    - name: Fetch master for GitVersion
+      if: github.ref != 'refs/heads/master'
+      run: git branch --create-reflog master origin/master
+
+    - name: GitVersion
+      id: gitversion  # step id used as reference for output values
+      uses: roryprimrose/rungitversion@v1.0.0
       
     - name: Generate nuget package
-      run: dotnet pack --configuration Release -o nupkg -p:Version=$BUILD_NUMBER .\Simple.HttpClientFactory\Simple.HttpClientFactory.csproj
+      run: dotnet pack --configuration Release -o nupkg -p:Version="${{ steps.gitversion.outputs.NuGetVersionV2 }}" .\Simple.HttpClientFactory\Simple.HttpClientFactory.csproj
       
