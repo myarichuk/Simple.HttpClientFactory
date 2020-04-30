@@ -45,8 +45,8 @@ namespace Simple.HttpClientFactory.Polly
             HttpResponseMessage response;
             try
             {
-                response = await _policy.ExecuteAsync((c, ct) => 
-                    base.SendAsync(request, cancellationToken), 
+                response = await _policy.ExecuteAsync(
+                    async (c, ct) => await base.SendAsync(request, cancellationToken), 
                     context,
                     cancellationToken)
                         .ConfigureAwait(false);

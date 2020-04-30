@@ -56,12 +56,13 @@ namespace Simple.HttpClientFactory.Tests
 		[Fact]
 		public async Task Client_with_retry_and_timeout_policy_should_properly_apply_policies()
 		{
+			//timeout after 2 secons, then retry
 			var clientWithRetry = new HttpClientBuilder()
 				.WithPolicy(
 						HttpPolicyExtensions
 						.HandleTransientHttpError()
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
-				.WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(3))
+				.WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
 				.Build();
 
 			var responseWithTimeout = await clientWithRetry.GetAsync(_server.Urls[0] + "/timeout");
@@ -81,7 +82,9 @@ namespace Simple.HttpClientFactory.Tests
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))))
 				.Build();
 
-			await Assert.ThrowsAsync<TimeoutRejectedException>(() => clientWithRetry.GetAsync(_server.Urls[0] + "/timeout"));
+			var response = await clientWithRetry.GetAsync(_server.Urls[0] + "/timeout");
+			Assert.Equal(4, _server.LogEntries.Count());
+            Assert.Equal(HttpStatusCode.RequestTimeout, response.StatusCode);
 		}
 
 
