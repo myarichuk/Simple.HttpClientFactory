@@ -8,7 +8,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
     timeout-minutes: 5
     steps:
     - uses: actions/checkout@v2
@@ -21,21 +24,10 @@ jobs:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-nuget-
-    - name: Generate self-signed certificate (for test using SSL)
-      run: |
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./localhost.key -passin pass:1234 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -out ./localhost.crt -config ./localhost.conf
-        openssl pkcs12 -export -out ./localhost.pfx -inkey ./localhost.key -in ./localhost.crt -passout pass:1234
-        sudo cp ./localhost.crt /usr/local/share/ca-certificates
-        sudo update-ca-certificates
-        sudo cp ./localhost.pfx /usr/local/share/ca-certificates
-        openssl verify localhost.crt
+          ${{ runner.os }}-nuget-    
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore
-      env:
-        ASPNETCORE_Kestrel__Certificates__Default__Path: "/usr/local/share/ca-certificates/localhost.pfx"
-        ASPNETCORE_Kestrel__Certificates__Default__Password: "1234"
