@@ -9,23 +9,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
+    - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
-    - name: Generate certificate for SSL tests     
+    - uses: actions/cache@v1
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    - name: Generate self-signed certificate (for test using SSL)
       run: |
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./localhost.key -out ./localhost.crt -config ./Simple.HttpClientFactory.Tests/CertStuff/localhost.conf
-        openssl pkcs12 -export -out ./localhost.pfx -inkey ./localhost.key -in ./localhost.crt
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./localhost.key -passin pass:1234 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -out ./localhost.crt -config ./localhost.conf
+        openssl pkcs12 -export -out ./localhost.pfx -inkey ./localhost.key -in ./localhost.crt -passout pass:1234
         sudo cp ./localhost.crt /usr/local/share/ca-certificates
         sudo update-ca-certificates
+        sudo cp ./localhost.pfx /usr/local/share/ca-certificates
         openssl verify localhost.crt
-        dotnet user-secrets --project ./Simple.HttpClientFactory.Tests/Simple.HttpClientFactory.Tests.csproj set "Kestrel:Certificates:Default:Path" "localhost.pfx"
-        dotnet user-secrets --project ./Simple.HttpClientFactory.Tests/Simple.HttpClientFactory.Tests.csproj set "Kestrel:Certificates:Default:Password" ""
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --no-restore
+      env:
+        ASPNETCORE_Kestrel__Certificates__Default__Path: "/usr/local/share/ca-certificates/localhost.pfx"
+        ASPNETCORE_Kestrel__Certificates__Default__Password: "1234"
