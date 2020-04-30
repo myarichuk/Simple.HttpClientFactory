@@ -12,14 +12,16 @@ jobs:
     timeout-minutes: 5
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET Core 3.1
+    - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
-    - name: Setup .NET Core 2.0
-      uses: actions/setup-dotnet@v1
+    - uses: actions/cache@v1
       with:
-        dotnet-version: 2.1.202
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
     - name: Generate self-signed certificate (for test using SSL)
       run: |
         openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./localhost.key -passin pass:1234 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -out ./localhost.crt -config ./localhost.conf
