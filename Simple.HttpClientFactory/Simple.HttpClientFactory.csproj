@@ -7,6 +7,7 @@
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageTags>httpclient, httpclientfactory, polly</PackageTags>
     <Description>A lightweight HttpClient factory that respects DNS switches and integrates Polly policies into the client</Description>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
