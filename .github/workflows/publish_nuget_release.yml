@@ -37,5 +37,5 @@ jobs:
       uses: roryprimrose/rungitversion@v1.0.0
       
     - name: Generate nuget package
-      run: dotnet pack --configuration Release -o nupkg -p:Version="${{ steps.gitversion.outputs.NuGetVersionV2 }}" .\Simple.HttpClientFactory\Simple.HttpClientFactory.csproj
+      run: dotnet pack --configuration Release -o nupkg -p:Version="${{ steps.gitversion.outputs.NuGetVersionV2 }}" ./Simple.HttpClientFactory/Simple.HttpClientFactory.csproj
       
