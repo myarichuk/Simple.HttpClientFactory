@@ -28,7 +28,7 @@ namespace Simple.HttpClientFactory.Tests
         [Fact]
         public async Task Can_do_http_get_with_plain_client()
         {
-            var client = new HttpClientBuilder().Build();
+            var client = HttpClientFactory.Create().Build();
             var response = await client.GetAsync(_server.Urls[0] + "/hello/world");
             
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -38,7 +38,7 @@ namespace Simple.HttpClientFactory.Tests
         [Fact]
         public async Task Can_do_http_post_with_plain_client()
         {
-            var client = new HttpClientBuilder().Build();
+            var client = HttpClientFactory.Create().Build();
             var response = await client.PostAsync(_server.Urls[0] + "/hello/world", new StringContent("{}"));
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);

@@ -3,13 +3,14 @@ using Simple.HttpClientFactory.Polly;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+#if NETCOREAPP2_1
 using System.Net.Security;
-using System.Security.Authentication;
+#endif
 using System.Security.Cryptography.X509Certificates;
 
 namespace Simple.HttpClientFactory
 {
-    public class HttpClientBuilder : IHttpClientBuilder
+    internal class HttpClientBuilder : IHttpClientBuilder
     {        
         private TimeSpan? _connectionTimeout;
         private readonly List<X509Certificate2> _certificates = new List<X509Certificate2>();

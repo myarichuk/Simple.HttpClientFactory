@@ -6,8 +6,10 @@
     <Company>Michael Yarichuk</Company>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageTags>httpclient, httpclientfactory, polly</PackageTags>
-    <Description>A lightweight HttpClient factory that respects DNS switches and integrates Polly policies into the client</Description>
+    <Description>A lightweight HttpClient factory with minimum dependencies that respects DNS changes and integrates Polly policies into the http client</Description>
     <Version>1.0.1</Version>
+    <RepositoryUrl>https://github.com/myarichuk/Simple.HttpClientFactory</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>

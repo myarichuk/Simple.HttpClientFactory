@@ -2,11 +2,9 @@
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
@@ -17,7 +15,7 @@ namespace Simple.HttpClientFactory.Tests
 {
     public class PolicyTests
     {
-		private WireMockServer _server;
+		private readonly WireMockServer _server;
 
 		public PolicyTests()
         {
@@ -57,7 +55,7 @@ namespace Simple.HttpClientFactory.Tests
 		public async Task Client_with_retry_and_timeout_policy_should_properly_apply_policies()
 		{
 			//timeout after 2 secons, then retry
-			var clientWithRetry = new HttpClientBuilder()
+			var clientWithRetry = HttpClientFactory.Create()
 				.WithPolicy(
 						HttpPolicyExtensions
 						.HandleTransientHttpError()
@@ -73,7 +71,7 @@ namespace Simple.HttpClientFactory.Tests
 		[Fact]
 		public async Task Client_with_retry_that_wraps_timeout_policy_should_properly_apply_policies()
 		{
-			var clientWithRetry = new HttpClientBuilder()
+			var clientWithRetry = HttpClientFactory.Create()
 				.WithPolicy(
 				Policy.WrapAsync(
 					Policy.TimeoutAsync<HttpResponseMessage>(25),
@@ -91,7 +89,7 @@ namespace Simple.HttpClientFactory.Tests
 		[Fact]
 		public async Task Client_without_retry_policy_should_fail_with_timeout()
 		{
-			var clientWithoutRetry = new HttpClientBuilder().Build();
+			var clientWithoutRetry = HttpClientFactory.Create().Build();
 
 			var responseWithTimeout = await clientWithoutRetry.GetAsync(_server.Urls[0] + "/hello/world");
 
@@ -104,7 +102,7 @@ namespace Simple.HttpClientFactory.Tests
         [Fact]
         public async Task Retry_policy_should_work()
         {
-			var clientWithRetry = new HttpClientBuilder()
+			var clientWithRetry = HttpClientFactory.Create()
 				.WithPolicy(HttpPolicyExtensions
 						.HandleTransientHttpError()
 						.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
