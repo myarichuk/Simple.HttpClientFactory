@@ -75,7 +75,7 @@ namespace Simple.HttpClientFactory.Tests
 			var clientWithRetry = new HttpClientBuilder()
 				.WithPolicy(
 				Policy.WrapAsync(
-					Policy.TimeoutAsync<HttpResponseMessage>(5),
+					Policy.TimeoutAsync<HttpResponseMessage>(25),
 						HttpPolicyExtensions
 						.HandleTransientHttpError()
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))))
