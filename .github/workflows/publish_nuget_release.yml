@@ -1,9 +1,11 @@
 name: NuGet
 
 on:
+  push:
+    branches: [ master ]  
   create:
-    tags:
-      - v*
+    tags: 
+      -*
 
 jobs:
   build-and-test:
