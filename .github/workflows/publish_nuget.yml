@@ -23,7 +23,7 @@ jobs:
       run: dotnet test --configuration Release
       
     - name: Fetch tags for GitVersion
-      run: git fetch --prune --unshallow
+      run: git fetch --prune
 
     - name: Fetch master for GitVersion
       if: github.ref != 'refs/heads/master'
