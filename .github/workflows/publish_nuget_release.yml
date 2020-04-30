@@ -22,10 +22,22 @@ jobs:
 
     - name: Run unit tests
       run: dotnet test --configuration Release
+
+    - name: Generate build number
+      id: buildnumber
+      uses: einaregilsson/build-number@v2 
+      with:
+        token: ${{secrets.github_token}}        
       
     - name: Generate nuget package
-      run: dotnet pack --configuration Release -o nupkg    
+      run: dotnet pack --configuration Release -o nupkg  -p:Version $BUILD_NUMBER  
       
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ./nupkg/*.nupkg
+        path: BUILD_NUMBER
+
     - name: Publish nuget package
       run: find . -name *.nupkg -type f -print0 | xargs -0 -I pkg dotnet nuget push pkg -k $nuget_api_key -s "https://api.nuget.org/v3/index.json" --skip-duplicate
       env:
