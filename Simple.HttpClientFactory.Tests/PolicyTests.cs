@@ -81,7 +81,7 @@ namespace Simple.HttpClientFactory.Tests
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))))
 				.Build();
 
-			Assert.ThrowsAsync<TimeoutRejectedException>(() => clientWithRetry.GetAsync(_server.Urls[0] + "/timeout"));
+			await Assert.ThrowsAsync<TimeoutRejectedException>(() => clientWithRetry.GetAsync(_server.Urls[0] + "/timeout"));
 		}
 
 
