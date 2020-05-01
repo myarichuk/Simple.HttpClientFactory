@@ -48,7 +48,7 @@ jobs:
     - name: Set version tag
       uses: avakar/tag-and-release@v1
       with:
-          release_name: Release v"${{ steps.gitversion.outputs.NuGetVersionV2 }}"
+          release_name: Release v${{ steps.gitversion.outputs.NuGetVersionV2 }}
           tag_name: "${{ steps.gitversion.outputs.NuGetVersionV2 }}"
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
