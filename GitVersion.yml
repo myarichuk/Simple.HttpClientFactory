@@ -14,13 +14,19 @@ branches:
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
-  otherbranches:
-    regex: '.*'
+  development:
+    regex: dev(el)?(op)?(ment)?[/-]
     mode: ContinuousDeployment
     tag: alpha
     increment: Patch
     prevent-increment-of-merged-branch-version: false
     track-merge-target: true
-    is-release-branch: false
+  hotfix:
+    regex: (hotfix(es)?|patch(es)?)[/-]
+    mode: ContinuousDeployment
+    tag: alpha
+    increment: Patch
+    prevent-increment-of-merged-branch-version: false
+    track-merge-target: true
 ignore:
   sha: []
