@@ -1,5 +1,4 @@
 ﻿using Polly;
-using Polly.Extensions.Http;
 using Polly.Timeout;
 using System;
 using System.Linq;
@@ -56,8 +55,9 @@ namespace Simple.HttpClientFactory.Tests
 			//timeout after 2 secons, then retry
 			var clientWithRetry = HttpClientFactory.Create()
 				.WithPolicy(
-						HttpPolicyExtensions
-						.HandleTransientHttpError()
+    					Policy<HttpResponseMessage>
+                            .Handle<HttpRequestException>()
+                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
 				.WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
 				.Build();
@@ -74,8 +74,9 @@ namespace Simple.HttpClientFactory.Tests
 				.WithPolicy(
 				Policy.WrapAsync(
 					Policy.TimeoutAsync<HttpResponseMessage>(25),
-						HttpPolicyExtensions
-						.HandleTransientHttpError()
+    					Policy<HttpResponseMessage>
+                            .Handle<HttpRequestException>()
+                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))))
 				.Build();
 
@@ -102,8 +103,10 @@ namespace Simple.HttpClientFactory.Tests
         public async Task Retry_policy_should_work()
         {
 			var clientWithRetry = HttpClientFactory.Create()
-				.WithPolicy(HttpPolicyExtensions
-						.HandleTransientHttpError()
+				.WithPolicy(
+    					Policy<HttpResponseMessage>
+                            .Handle<HttpRequestException>()
+                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 						.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
 				.Build();
 

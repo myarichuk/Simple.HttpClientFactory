@@ -1,5 +1,4 @@
 ﻿using Polly;
-using Polly.Extensions.Http;
 using Polly.Timeout;
 using System;
 using System.Collections.Generic;
@@ -61,8 +60,9 @@ namespace Simple.HttpClientFactory.Tests
             //timeout after 2 secons, then retry
 			var clientWithRetry = HttpClientFactory.Create()
 				.WithPolicy(
-						HttpPolicyExtensions
-						.HandleTransientHttpError()
+						Policy<HttpResponseMessage>
+                            .Handle<HttpRequestException>()
+                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
 				.WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
                 .WithHttpHandler(eventMessageHandler)
@@ -91,8 +91,9 @@ namespace Simple.HttpClientFactory.Tests
             //timeout after 2 secons, then retry
 			var clientWithRetry = HttpClientFactory.Create()
 				.WithPolicy(
-						HttpPolicyExtensions
-						.HandleTransientHttpError()
+    						Policy<HttpResponseMessage>
+                                .Handle<HttpRequestException>()
+                                .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
 				.WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
                 .WithHttpHandler(eventMessageHandler)
@@ -123,8 +124,10 @@ namespace Simple.HttpClientFactory.Tests
             var eventMessageHandler = new EventMessageHandler(_visitedMiddleware);
 
 			var clientWithRetry = HttpClientFactory.Create()
-				.WithPolicy(HttpPolicyExtensions
-						.HandleTransientHttpError()
+				.WithPolicy(
+    					Policy<HttpResponseMessage>
+                            .Handle<HttpRequestException>()
+                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 						.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithHttpHandler(eventMessageHandler)
                 .WithHttpHandler(trafficRecorderMessageHandler)
@@ -156,8 +159,10 @@ namespace Simple.HttpClientFactory.Tests
             var eventMessageHandler = new EventMessageHandler(_visitedMiddleware);
 
 			var clientWithRetry = HttpClientFactory.Create()
-				.WithPolicy(HttpPolicyExtensions
-						.HandleTransientHttpError()
+				.WithPolicy(
+    					Policy<HttpResponseMessage>
+                            .Handle<HttpRequestException>()
+                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 						.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithHttpHandler(eventMessageHandler)
 				.Build();
