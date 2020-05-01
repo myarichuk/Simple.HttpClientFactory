@@ -1,5 +1,4 @@
 ﻿using Polly;
-using Polly.Extensions.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,9 +47,11 @@ namespace Simple.HttpClientFactory.Tests
             HttpClientFactory
                 .Create()
                 .WithCertificate(DefaultDevCert.Get())
-                .WithPolicy(HttpPolicyExtensions
-                              .HandleTransientHttpError()
-                              .RetryAsync(3))
+                .WithPolicy(
+    					Policy<HttpResponseMessage>
+                            .Handle<HttpRequestException>()
+                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                       .RetryAsync(3))
                 .Build();
 
         [Fact(Skip = "Requires local certificate setup")]
