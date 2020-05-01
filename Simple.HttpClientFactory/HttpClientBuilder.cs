@@ -2,23 +2,21 @@
 using Simple.HttpClientFactory.Polly;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+#if NETCOREAPP2_1
 using System.Net.Security;
-using System.Security.Authentication;
+#endif
 using System.Security.Cryptography.X509Certificates;
 
 namespace Simple.HttpClientFactory
 {
-    public class HttpClientBuilder : IHttpClientBuilder
+    internal class HttpClientBuilder : IHttpClientBuilder
     {        
-        private TimeSpan? _connectionTimeout;
+        private TimeSpan? _timeout;
         private readonly List<X509Certificate2> _certificates = new List<X509Certificate2>();
         private readonly List<IAsyncPolicy<HttpResponseMessage>> _policies = new List<IAsyncPolicy<HttpResponseMessage>>();
-
-        #if NETCOREAPP2_1
-        private const int MAX_CONNECTION_PER_SERVER = 20;
-        private static readonly TimeSpan ConnectionLifeTime = TimeSpan.FromMinutes(1);
-        #endif
+        private readonly List<DelegatingHandler> _middlewareHandlers = new List<DelegatingHandler>();
 
 
         public IHttpClientBuilder WithCertificate(params X509Certificate2[] certificates)
@@ -33,12 +31,19 @@ namespace Simple.HttpClientFactory
             return this;
         }
 
-        public IHttpClientBuilder WithConnectionTimeout(in TimeSpan connectionTimeout)
+        public IHttpClientBuilder WithTimeout(in TimeSpan timeout)
         {
-            _connectionTimeout = connectionTimeout;
+            _timeout = timeout;
             return this;
         }        
-
+        
+        public IHttpClientBuilder WithHttpHandler(DelegatingHandler handler)
+        {
+            if(_middlewareHandlers.Count > 0)
+                _middlewareHandlers.Last().InnerHandler = handler;
+            _middlewareHandlers.Add(handler);
+            return this;
+        }
 
         #if NETCOREAPP2_1
         
@@ -51,9 +56,9 @@ namespace Simple.HttpClientFactory
             var clientHandler = new SocketsHttpHandler
             {
                 // https://github.com/dotnet/corefx/issues/26895
-                PooledConnectionLifetime = ConnectionLifeTime,
-                PooledConnectionIdleTimeout = ConnectionLifeTime,
-                MaxConnectionsPerServer = MAX_CONNECTION_PER_SERVER
+                PooledConnectionLifetime = Constants.ConnectionLifeTime,
+                PooledConnectionIdleTimeout = Constants.ConnectionLifeTime,
+                MaxConnectionsPerServer = Constants.MaxConnectionsPerServer
             };
             
             if(_certificates.Count > 0)
@@ -78,34 +83,32 @@ namespace Simple.HttpClientFactory
                     var @new = new PolicyHttpMessageHandler(_policies[i], policyHandler);
                     policyHandler = @new;
                 }
-            }
+            }       
 
-            return new HttpClient(policyHandler ?? (HttpMessageHandler)clientHandler, true);
+            var client = ConstructClientWithMiddleware(clientHandler, policyHandler);
+
+            if(_timeout.HasValue)
+                client.Timeout = _timeout.Value;
+
+            return client;
         }
 
         #else
 
         public HttpClient Build(Action<HttpClientHandler> clientHandlerConfigurator = null)
         {
-            PolicyHttpMessageHandler policyHandler = null;
-            
+
             var clientHandler = new HttpClientHandlerEx();
-            
-            if(_certificates.Count > 0)
-            {
+
+            if (_certificates.Count > 0)
                 clientHandler.ClientCertificates.AddRange(_certificates.ToArray());
-                
-                #if NET472
 
-                clientHandler.ClientCertificateOptions = ClientCertificateOption.Automatic;
-
-                #endif
-            }           
             clientHandlerConfigurator?.Invoke(clientHandler);
 
-            for(int i = 0; i < _policies.Count; i++)
+            PolicyHttpMessageHandler policyHandler = null;
+            for (int i = 0; i < _policies.Count; i++)
             {
-                if(policyHandler == null)
+                if (policyHandler == null)
                     policyHandler = new PolicyHttpMessageHandler(_policies[i], clientHandler);
                 else
                 {
@@ -114,9 +117,36 @@ namespace Simple.HttpClientFactory
                 }
             }
 
-            return new HttpClient(policyHandler ?? (HttpMessageHandler)clientHandler, true);
-        }
+            var client = ConstructClientWithMiddleware(clientHandler, policyHandler);
 
-        #endif
+            if (_timeout.HasValue)
+                client.Timeout = _timeout.Value;
+
+            return client;
+        }
+#endif
+        private HttpClient ConstructClientWithMiddleware<TClientHandler>(TClientHandler clientHandler, PolicyHttpMessageHandler policyHandler)
+            where TClientHandler : HttpMessageHandler
+        {
+            HttpClient client;
+            if (policyHandler != null)
+            {
+                if (_middlewareHandlers.Count > 0)
+                {
+                    _middlewareHandlers.LastOrDefault().InnerHandler = policyHandler;
+                    client = new HttpClient(_middlewareHandlers.FirstOrDefault(), true);
+                }
+                else
+                    client = new HttpClient(policyHandler, true);
+            }
+            else if (_middlewareHandlers.Count > 0)
+            {
+                _middlewareHandlers.LastOrDefault().InnerHandler = clientHandler;
+                client = new HttpClient(_middlewareHandlers.FirstOrDefault(), true);
+            }
+            else
+                client = new HttpClient(clientHandler, true);
+            return client;
+        }
     }
 }

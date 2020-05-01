@@ -11,7 +11,9 @@ namespace Simple.HttpClientFactory
 
         IHttpClientBuilder WithPolicy(IAsyncPolicy<HttpResponseMessage> policy);
 
-        IHttpClientBuilder WithConnectionTimeout(in TimeSpan connectionTimeout);
+        IHttpClientBuilder WithTimeout(in TimeSpan connectionTimeout);
+
+        IHttpClientBuilder WithHttpHandler(DelegatingHandler handler);
 
         #if NETCOREAPP2_1
 
