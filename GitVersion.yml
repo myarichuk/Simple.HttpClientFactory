@@ -1,32 +1,48 @@
-branches:  
-  master:
-    mode: ContinuousDeployment
-    increment: Minor
-    prevent-increment-of-merged-branch-version: false
-    track-merge-target: true
-  pull-request:
-    regex: (pull|pull\-requests|pr)[/-]
+assembly-versioning-scheme: MajorMinorPatch
+mode: ContinuousDeployment
+next-version: 0.1.1
+branches:
+  develop:
     mode: ContinuousDelivery
-    tag: pr
-    increment: Inherit
-    prevent-increment-of-merged-branch-version: false
-    tag-number-pattern: '[/-](?<number>\d+)[-/]'
+    tag: alpha
+    is-release-branch: false
+  master:
+    regex: ^master
+    mode: ContinuousDelivery
+    tag: ''
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
-  development:
-    regex: dev(el)?(op)?(ment)?[/-]
-    mode: ContinuousDeployment
-    tag: alpha
+  release:
+    regex: ^releases?[/-]
+    mode: ContinuousDelivery
+    tag: rc
     increment: Patch
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
+    tracks-release-branches: false
+    is-release-branch: true
+    pre-release-weight: 1000
+  feature:
+    regex: ^features?[/-]
+    mode: ContinuousDelivery
+    tag: useBranchName
+    increment: Inherit
     prevent-increment-of-merged-branch-version: false
-    track-merge-target: true
+    track-merge-target: false
+    tracks-release-branches: false
+    is-release-branch: false
   hotfix:
-    regex: (hotfix(es)?|patch(es)?)[/-]
-    mode: ContinuousDeployment
-    tag: alpha
+    regex: ^hotfix(es)?[/-]
+    mode: ContinuousDelivery
+    tag: beta
     increment: Patch
     prevent-increment-of-merged-branch-version: false
-    track-merge-target: true
+    track-merge-target: false
+    tracks-release-branches: false
+    is-release-branch: false
 ignore:
   sha: []
+merge-message-formats: {}
