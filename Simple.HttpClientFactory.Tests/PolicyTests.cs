@@ -48,7 +48,6 @@ namespace Simple.HttpClientFactory.Tests
 					.UsingGet())
 				.RespondWith(Response.Create()
 					.WithStatusCode(408));
-
         }
 
 		[Fact]

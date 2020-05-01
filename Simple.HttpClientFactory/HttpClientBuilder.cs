@@ -132,8 +132,12 @@ namespace Simple.HttpClientFactory
             if (policyHandler != null)
             {
                 if (_middlewareHandlers.Count > 0)
-                    policyHandler.InnerHandler = _middlewareHandlers.LastOrDefault();
-                client = new HttpClient(policyHandler, true);
+                {
+                    _middlewareHandlers.LastOrDefault().InnerHandler = policyHandler;
+                    client = new HttpClient(_middlewareHandlers.FirstOrDefault(), true);
+                }
+                else
+                    client = new HttpClient(policyHandler, true);
             }
             else if (_middlewareHandlers.Count > 0)
             {
