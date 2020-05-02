@@ -1,4 +1,4 @@
-![Tests](https://github.com/myarichuk/Simple.HttpClientFactory/workflows/Tests/badge.svg)
+![Tests](https://github.com/myarichuk/Simple.HttpClientFactory/workflows/Tests/badge.svg)  
 ![Nuget](https://img.shields.io/nuget/v/Simple.HttpClientFactory?color=light-green&label=Simple.HttpClientFactory)  
 
 ### The Why?
