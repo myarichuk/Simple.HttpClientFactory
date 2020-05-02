@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="SonarQube - Simple.HttpClientFactory Sonar way" ToolsVersion="16.0">
+  <Include Path="..\.sonarlint\myarichuk_simple.httpclientfactorycsharp.ruleset" Action="Default" />
+</RuleSet>

@@ -1,0 +1,15 @@
+{
+  "ServerUri": "https://sonarcloud.io/",
+  "Organization": {
+    "Key": "myarichuk",
+    "Name": "Michael Yarichuk"
+  },
+  "ProjectKey": "myarichuk_Simple.HttpClientFactory",
+  "ProjectName": "Simple.HttpClientFactory",
+  "Profiles": {
+    "CSharp": {
+      "ProfileKey": "AXHXTSn0WStA50QHFA2b",
+      "ProfileTimestamp": "2020-05-01T07:09:02Z"
+    }
+  }
+}
