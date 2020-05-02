@@ -1,4 +1,5 @@
-
+[![Build Status](https://travis-ci.org/myarichuk/Simple.HttpClientFactory.svg?branch=master)](https://travis-ci.org/myarichuk/Simple.HttpClientFactory)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=myarichuk_Simple.HttpClientFactory&metric=alert_status)](https://sonarcloud.io/dashboard?id=myarichuk_Simple.HttpClientFactory)
 ![Nuget](https://img.shields.io/nuget/v/Simple.HttpClientFactory?color=light-green)  
 
 ### The Why?
