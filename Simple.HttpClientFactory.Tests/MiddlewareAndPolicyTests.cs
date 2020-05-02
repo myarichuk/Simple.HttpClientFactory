@@ -65,7 +65,7 @@ namespace Simple.HttpClientFactory.Tests
                             .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
 				.WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
-                .WithHttpHandler(eventMessageHandler)
+                .WithMessageHandler(eventMessageHandler)
 				.Build();
 
             Task<HttpResponseMessage> responseTask = null;
@@ -96,8 +96,8 @@ namespace Simple.HttpClientFactory.Tests
                                 .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
 				.WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
-                .WithHttpHandler(eventMessageHandler)
-                .WithHttpHandler(trafficRecorderMessageHandler)
+                .WithMessageHandler(eventMessageHandler)
+                .WithMessageHandler(trafficRecorderMessageHandler)
 				.Build();
 
             Task<HttpResponseMessage> responseTask = null;
@@ -129,8 +129,8 @@ namespace Simple.HttpClientFactory.Tests
                             .Handle<HttpRequestException>()
                             .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 						.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
-                .WithHttpHandler(eventMessageHandler)
-                .WithHttpHandler(trafficRecorderMessageHandler)
+                .WithMessageHandler(eventMessageHandler)
+                .WithMessageHandler(trafficRecorderMessageHandler)
 				.Build();
 
 			Task<HttpResponseMessage> responseTask = null;
@@ -157,19 +157,18 @@ namespace Simple.HttpClientFactory.Tests
         public async Task Retry_policy_should_work_with_single_middleware()
         {
             var eventMessageHandler = new EventMessageHandler(_visitedMiddleware);
-
 			var clientWithRetry = HttpClientFactory.Create()
 				.WithPolicy(
     					Policy<HttpResponseMessage>
                             .Handle<HttpRequestException>()
                             .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
 						.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
-                .WithHttpHandler(eventMessageHandler)
+                .WithMessageHandler(eventMessageHandler)
 				.Build();
 
 			Task<HttpResponseMessage> responseTask = null;
             
-           await Assert.RaisesAsync<EventMessageHandler.RequestEventArgs>(
+            await Assert.RaisesAsync<EventMessageHandler.RequestEventArgs>(
                 h => eventMessageHandler.Request += h,
                 h => eventMessageHandler.Request -= h,
                 () => responseTask = clientWithRetry.GetAsync(_server.Urls[0] + "/hello/world"));

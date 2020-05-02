@@ -33,7 +33,7 @@ namespace Simple.HttpClientFactory.Tests
         {
             var trafficRecorderMessageHandler = new TrafficRecorderMessageHandler(_visitedMiddleware);
             var client = HttpClientFactory.Create()
-                .WithHttpHandler(trafficRecorderMessageHandler)
+                .WithMessageHandler(trafficRecorderMessageHandler)
                 .Build();
 
             var _ = await client.GetAsync(_server.Urls[0] + "/hello/world");
@@ -49,8 +49,8 @@ namespace Simple.HttpClientFactory.Tests
             var eventMessageHandler = new EventMessageHandler(_visitedMiddleware);
 
             var client = HttpClientFactory.Create()
-                .WithHttpHandler(eventMessageHandler)
-                .WithHttpHandler(trafficRecorderMessageHandler)
+                .WithMessageHandler(eventMessageHandler)
+                .WithMessageHandler(trafficRecorderMessageHandler)
                 .Build();
 
            var raisedEvent = await Assert.RaisesAsync<EventMessageHandler.RequestEventArgs>(
@@ -73,8 +73,8 @@ namespace Simple.HttpClientFactory.Tests
             var eventMessageHandler = new EventMessageHandler(_visitedMiddleware);
 
             var client = HttpClientFactory.Create()
-                .WithHttpHandler(trafficRecorderMessageHandler) //first execute this, then eventMessageHandler
-                .WithHttpHandler(eventMessageHandler)
+                .WithMessageHandler(trafficRecorderMessageHandler) //first execute this, then eventMessageHandler
+                .WithMessageHandler(eventMessageHandler)
                 .Build();
 
            var raisedEvent = await Assert.RaisesAsync<EventMessageHandler.RequestEventArgs>(
