@@ -35,13 +35,25 @@ namespace Simple.HttpClientFactory
         {
             _timeout = timeout;
             return this;
-        }        
-        
-        public IHttpClientBuilder WithHttpHandler(DelegatingHandler handler)
+        }
+
+        public IHttpClientBuilder WithMessageExceptionHandler(
+                Func<HttpRequestException, bool> exceptionHandlingPredicate,
+                Func<HttpRequestException, Exception> exceptionHandler) =>
+            WithMessageHandler(new MessageExceptionHandler(exceptionHandlingPredicate, exceptionHandler, null));
+
+        public IHttpClientBuilder WithMessageHandler(DelegatingHandler handler)
         {
             if(_middlewareHandlers.Count > 0)
                 _middlewareHandlers.Last().InnerHandler = handler;
             _middlewareHandlers.Add(handler);
+            return this;
+        }
+
+        public IHttpClientBuilder WithMessageHandlers(IEnumerable<DelegatingHandler> handlers)
+        {
+            foreach(var handler in handlers)
+                WithMessageHandler(handler);
             return this;
         }
 
