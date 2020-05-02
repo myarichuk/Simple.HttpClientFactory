@@ -1,6 +1,7 @@
 language: csharp
 solution: Simple.HttpClientFactory.sln
 mono: none
+dist: trusty
 dotnet: 3.1.101
 install:
 - dotnet restore
@@ -8,4 +9,13 @@ script:
 - dotnet build
 - dotnet test
 
-secure: "VvSRjk/kZnh0uIO41JT5WJemJczixs6drDOp87WaN8iZdLkDYx+chL6LJHhOJA4fCUJmeB0CHCzYeSF6JN/sB/22MwbHx33luNsnRHyxKrFJ6p8FIDgIL+iQQTooJvxqODLO6y/YAnDqBFnfe85xYk/7lwo6K4NEb/jbKuK8tZw4m5VXOy8SjqwWrTlQlNrC1EiNaebAfX7v9rhK34yjLBoMlFm8v07+6U5BJ0nUIL+/tvuQNBz6WpZV3oLCm61pDdAWcP0hMTe1v9a6Z8Meml4AgKx1qCxYHMlaQ3swZtMFZG4q/dwuI9Vjt/mDlb4IvwL7ECinOCT1CWMHnSo43jFtByD/0X8okNO6wR2B9m22CbgyMSWCNOevZV/fNjbgXsqxT7gmh1jEp1Q4hiQCm2IugbX/YVao2xxw0Ukwgy41zKxJvJTLKAwrluQU9WOnHgRSyfhQ0hOgXw1ofP/GLk4fUMpcPKpKZpyqLYjo0oj2DVAnA2h4eydpGU5UcBt4z9deo0LHOKoVBhd22F7draeAsqbaDrRlSe2KS6ouhEKXqbrL1RokdKixhpsvfZzY9EthorsoTGkCArSEzH9rQeOnYkg8kk57cPJQP8C5brrzm9BhSn83klETs8hpC4RE2/GAK8/RXLOQ+AbULHiBXlX3ogXoF1sE0vpqtlpLxZk="
+addons:
+  sonarcloud:
+    organization: "myarichuk"
+    token:
+      secure: "VvSRjk/kZnh0uIO41JT5WJemJczixs6drDOp87WaN8iZdLkDYx+chL6LJHhOJA4fCUJmeB0CHCzYeSF6JN/sB/22MwbHx33luNsnRHyxKrFJ6p8FIDgIL+iQQTooJvxqODLO6y/YAnDqBFnfe85xYk/7lwo6K4NEb/jbKuK8tZw4m5VXOy8SjqwWrTlQlNrC1EiNaebAfX7v9rhK34yjLBoMlFm8v07+6U5BJ0nUIL+/tvuQNBz6WpZV3oLCm61pDdAWcP0hMTe1v9a6Z8Meml4AgKx1qCxYHMlaQ3swZtMFZG4q/dwuI9Vjt/mDlb4IvwL7ECinOCT1CWMHnSo43jFtByD/0X8okNO6wR2B9m22CbgyMSWCNOevZV/fNjbgXsqxT7gmh1jEp1Q4hiQCm2IugbX/YVao2xxw0Ukwgy41zKxJvJTLKAwrluQU9WOnHgRSyfhQ0hOgXw1ofP/GLk4fUMpcPKpKZpyqLYjo0oj2DVAnA2h4eydpGU5UcBt4z9deo0LHOKoVBhd22F7draeAsqbaDrRlSe2KS6ouhEKXqbrL1RokdKixhpsvfZzY9EthorsoTGkCArSEzH9rQeOnYkg8kk57cPJQP8C5brrzm9BhSn83klETs8hpC4RE2/GAK8/RXLOQ+AbULHiBXlX3ogXoF1sE0vpqtlpLxZk="
+
+script:
+  # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
+  - sonar-scanner
+
