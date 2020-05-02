@@ -22,18 +22,7 @@ namespace Simple.HttpClientFactory.Tests
 
         public SecureClientBuilderTests()
         {
-            _server = WireMockServer.Start(new WireMock.Settings.WireMockServerSettings
-            {
-                UseSSL = true,
-                PostWireMockMiddlewareInit = app =>
-                {
-                    if(app is Microsoft.AspNetCore.Builder.IApplicationBuilder builder)
-                    {
-                        
-                        Console.WriteLine("AA");
-                    }
-                }
-            });
+            _server = WireMockServer.Start(ssl: true);
 
             _server.Given(Request.Create().WithPath("/hello/world").UsingAnyMethod())
                    .RespondWith(
