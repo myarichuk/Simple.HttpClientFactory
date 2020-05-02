@@ -1,5 +1,5 @@
-![Tests](https://github.com/myarichuk/Simple.HttpClientFactory/workflows/Tests/badge.svg)  
-![Nuget](https://img.shields.io/nuget/v/Simple.HttpClientFactory?color=light-green&label=Simple.HttpClientFactory)  
+![Tests](https://github.com/myarichuk/Simple.HttpClientFactory/workflows/Tests/badge.svg)
+![Nuget](https://img.shields.io/nuget/v/Simple.HttpClientFactory?color=light-green)  
 
 ### The Why?
 A first question would be - why create another factory for ``HttpClient`` if Microsoft have already created an excellent library in ``Microsoft.Http.Extensions``?
