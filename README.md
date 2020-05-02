@@ -1,4 +1,3 @@
-![Tests](https://github.com/myarichuk/Simple.HttpClientFactory/workflows/Tests/badge.svg)
 ### The Why?
 A first question would be - why create another factory for ``HttpClient`` if Microsoft have already created an excellent library in ``Microsoft.Http.Extensions``?
 (take a look at this [documentation article](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests) to learn more)  
