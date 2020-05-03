@@ -259,3 +259,5 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/Simple.HttpClientFactory.Tests/coverage.netcoreapp3.1.opencover.xml
+/Simple.HttpClientFactory.Tests/coverage.net472.opencover.xml
