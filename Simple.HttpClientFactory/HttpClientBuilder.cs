@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 #if NETCOREAPP2_1
 using System.Net.Security;
 #endif
@@ -19,13 +20,20 @@ namespace Simple.HttpClientFactory
         private readonly List<DelegatingHandler> _middlewareHandlers = new List<DelegatingHandler>();
         private readonly Dictionary<string, string> _defaultHeaders = new Dictionary<string, string>();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IHttpClientBuilder WithDefaultHeader(string name, string value)
+        {
+            if(!_defaultHeaders.ContainsKey(name))
+                _defaultHeaders.Add(name, value);
+
+            return this;
+        }
+
         public IHttpClientBuilder WithDefaultHeaders(IReadOnlyDictionary<string, string> headers)
         {
             foreach(var kvp in headers)
-            {
-                if(!_defaultHeaders.ContainsKey(kvp.Key))
-                    _defaultHeaders.Add(kvp.Key, kvp.Value);
-            }
+                WithDefaultHeader(kvp.Key, kvp.Value);
+
             return this;
         }
 

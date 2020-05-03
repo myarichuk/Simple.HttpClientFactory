@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
@@ -12,7 +10,7 @@ using Xunit;
 
 namespace Simple.HttpClientFactory.Tests
 {
-    public class MiddlewareDelegateTests
+    public partial class MiddlewareDelegateTests
     {
         private readonly WireMockServer _server;
         private readonly List<string> _visitedMiddleware = new List<string>();
@@ -89,54 +87,6 @@ namespace Simple.HttpClientFactory.Tests
             Assert.Equal(HttpStatusCode.OK, trafficRecorderMessageHandler.Traffic[0].Item2.StatusCode);
 
             Assert.Equal(new [] { nameof(EventMessageHandler), nameof(TrafficRecorderMessageHandler) }, _visitedMiddleware);
-        }
-
-        public class EventMessageHandler : DelegatingHandler
-        {
-            public event EventHandler<RequestEventArgs> Request;
-            public event EventHandler<ResponseEventArgs> Response;
-
-            private readonly List<string> _visitedMiddleware;
-
-            public EventMessageHandler(List<string> visitedMiddleware) => _visitedMiddleware = visitedMiddleware;
-
-            public class RequestEventArgs : EventArgs
-            {
-                public HttpRequestMessage Request { get; set; }
-            }
-
-            public class ResponseEventArgs : EventArgs
-            {
-                public HttpResponseMessage Response { get; set; }
-            }
-
-            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                Request?.Invoke(this ,new RequestEventArgs { Request = request });
-                var response = await base.SendAsync(request, cancellationToken);
-                Response?.Invoke(this, new ResponseEventArgs { Response = response });
-                _visitedMiddleware.Add(nameof(EventMessageHandler));
-                return response;
-            }
-        }
-
-        public class TrafficRecorderMessageHandler : DelegatingHandler
-        {
-            public List<(HttpRequestMessage, HttpResponseMessage)> Traffic { get; } = new List<(HttpRequestMessage, HttpResponseMessage)>();
-
-            private readonly List<string> _visitedMiddleware;
-
-            public TrafficRecorderMessageHandler(List<string> visitedMiddleware) => _visitedMiddleware = visitedMiddleware;
-
-            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                request.Headers.Add("foobar", "foobar");
-                var response = await base.SendAsync(request, cancellationToken);
-                _visitedMiddleware.Add(nameof(TrafficRecorderMessageHandler));
-                Traffic.Add((request, response));
-
-                return response;
-            }
-        }
+        }     
     }
 }
