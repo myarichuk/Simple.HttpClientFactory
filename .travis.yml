@@ -4,13 +4,13 @@ mono: none
 dist: bionic
 dotnet: 3.1.101
 before_install:
-- if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+- bash ./tools/travis-ci-install-sonar.sh
 install:
   - dotnet restore
 script:
 - dotnet build
 - dotnet test
-- sonar-scanner
+- bash ./tools/travis-ci-build.sh
 
 addons:
   sonarcloud:
