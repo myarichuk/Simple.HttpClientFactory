@@ -8,6 +8,4 @@ before_install:
 install:
   - dotnet restore
 script:
-- dotnet build
-- dotnet test
 - bash ./tools/travis-ci-build.sh
