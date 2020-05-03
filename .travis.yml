@@ -5,7 +5,7 @@ dotnet: 3.1
 install:
   - dotnet restore
 script:
-  - dotnet dev-certs https -t -v
+  - dotnet dev-certs https -t
   - dotnet build
   - dotnet test
   - sonar-scanner
