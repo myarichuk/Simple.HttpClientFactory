@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <UserSecretsId>b7cd72c5-d465-41ff-bd0a-fcd61802b52f</UserSecretsId>
+    <ProjectGuid>d5d1f4cf-309b-4d87-b44f-28cee8fb1c36</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <TargetFramework>netcoreapp3.1</TargetFramework>
