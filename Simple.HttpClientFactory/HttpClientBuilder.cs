@@ -17,13 +17,36 @@ namespace Simple.HttpClientFactory
         private readonly List<X509Certificate2> _certificates = new List<X509Certificate2>();
         private readonly List<IAsyncPolicy<HttpResponseMessage>> _policies = new List<IAsyncPolicy<HttpResponseMessage>>();
         private readonly List<DelegatingHandler> _middlewareHandlers = new List<DelegatingHandler>();
+        private readonly Dictionary<string, string> _defaultHeaders = new Dictionary<string, string>();
 
+        public IHttpClientBuilder WithDefaultHeaders(IReadOnlyDictionary<string, string> headers)
+        {
+            foreach(var kvp in headers)
+            {
+                if(!_defaultHeaders.ContainsKey(kvp.Key))
+                    _defaultHeaders.Add(kvp.Key, kvp.Value);
+            }
+            return this;
+        }
 
+        public IHttpClientBuilder WithCertificates(IEnumerable<X509Certificate2> certificates)
+        {                        
+            _certificates.AddRange(certificates);
+            return this;
+        }
+        
         public IHttpClientBuilder WithCertificate(params X509Certificate2[] certificates)
         {                        
             _certificates.AddRange(certificates);
             return this;
         }
+
+        public IHttpClientBuilder WithPolicies(IEnumerable<IAsyncPolicy<HttpResponseMessage>> policies)
+        {
+            _policies.AddRange(policies);
+            return this;
+        }
+
 
         public IHttpClientBuilder WithPolicy(IAsyncPolicy<HttpResponseMessage> policy)
         {
@@ -130,7 +153,7 @@ namespace Simple.HttpClientFactory
             }
 
             var client = ConstructClientWithMiddleware(clientHandler, policyHandler);
-
+            
             if (_timeout.HasValue)
                 client.Timeout = _timeout.Value;
 
@@ -158,6 +181,16 @@ namespace Simple.HttpClientFactory
             }
             else
                 client = new HttpClient(clientHandler, true);
+
+            if(_defaultHeaders.Count > 0)
+            {
+                foreach(var header in _defaultHeaders)
+                {
+                    if(!client.DefaultRequestHeaders.Contains(header.Key))
+                        client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                }
+            }
+
             return client;
         }
     }
