@@ -1,5 +1,6 @@
 ﻿using Polly;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 
@@ -8,9 +9,25 @@ namespace Simple.HttpClientFactory
     public interface IHttpClientBuilder
     {
         /// <summary>
+        /// Add default headers to be added to teach request
+        /// </summary>
+        IHttpClientBuilder WithDefaultHeaders(IReadOnlyDictionary<string, string> headers);
+
+        /// <summary>
+        /// Configure one or more SSL certificates to use
+        /// </summary>
+        IHttpClientBuilder WithCertificates(IEnumerable<X509Certificate2> certificates);
+
+        /// <summary>
         /// Configure one or more SSL certificates to use
         /// </summary>
         IHttpClientBuilder WithCertificate(params X509Certificate2[] certificates);
+
+        /// <summary>
+        /// Chain multiple Polly error policies
+        /// </summary>
+        /// <remarks>Policies will be evaluated in the order of their configuration</remarks>
+        IHttpClientBuilder WithPolicies(IEnumerable<IAsyncPolicy<HttpResponseMessage>> policies);
 
         /// <summary>
         /// Chain Polly error policy
