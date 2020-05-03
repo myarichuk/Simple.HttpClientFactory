@@ -1,5 +1,4 @@
-﻿using Easy.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -51,7 +50,7 @@ namespace Simple.HttpClientFactory
 
             public override bool Equals(object obj) => obj is UriCacheKey other && Equals(other);
 
-            public override int GetHashCode() => HashHelper.GetHashCode(_uri.Scheme, _uri.DnsSafeHost, _uri.Port);
+            public override int GetHashCode() => HashCode.Combine(_uri.Scheme, _uri.DnsSafeHost, _uri.Port);
 
             public static bool operator ==(UriCacheKey left, UriCacheKey right) => left.Equals(right);
 
