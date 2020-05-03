@@ -9,7 +9,12 @@ namespace Simple.HttpClientFactory
     public interface IHttpClientBuilder
     {
         /// <summary>
-        /// Add default headers to be added to teach request
+        /// Add default headers to be added to each request
+        /// </summary>
+        IHttpClientBuilder WithDefaultHeader(string name, string value);
+
+        /// <summary>
+        /// Add default headers to be added to each request
         /// </summary>
         IHttpClientBuilder WithDefaultHeaders(IReadOnlyDictionary<string, string> headers);
 

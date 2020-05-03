@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -23,6 +25,24 @@ namespace Simple.HttpClientFactory.Tests
                           .WithHeader("Content-Type", "text/plain")
                           .WithBody("Hello world!"));         
         }
+
+        [Fact]
+        public async Task Will_send_default_headers()
+        {
+            var trafficRecorder = new TrafficRecorderMessageHandler(new List<string>());
+
+            var client = HttpClientFactory
+                .Create(trafficRecorder)
+                .WithDefaultHeaders(new Dictionary<string, string> { { "foobar", "xyz123" } })
+                .Build();
+
+            _ = await client.GetAsync(_server.Urls[0] + "/hello/world");
+
+            Assert.Single(trafficRecorder.Traffic); //sanity check
+            Assert.True(trafficRecorder.Traffic[0].Item1.Headers.Contains("foobar"));
+            Assert.Equal("xyz123", trafficRecorder.Traffic[0].Item1.Headers.GetValues("foobar").FirstOrDefault());
+        }
+
 
         [Fact]
         public async Task Can_do_http_get_with_plain_client()
