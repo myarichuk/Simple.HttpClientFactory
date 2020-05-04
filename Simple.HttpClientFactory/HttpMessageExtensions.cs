@@ -1,7 +1,7 @@
-﻿using Polly;
-using System.Net.Http;
+﻿using System.Net.Http;
+using Polly;
 
-namespace Simple.HttpClientFactory.Polly
+namespace Simple.HttpClientFactory
 {
     public static class HttpMessageExtensions
     {

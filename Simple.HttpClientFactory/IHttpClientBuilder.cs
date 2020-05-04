@@ -48,7 +48,14 @@ namespace Simple.HttpClientFactory
         /// <summary>
         /// Add http message handler to processing pipeline
         /// </summary>
+        /// <exception cref="T:System.ArgumentNullException"><paramref name="handler"/> is <see langword="null"/></exception>
         IHttpClientBuilder WithMessageHandler(DelegatingHandler handler);
+
+        /// <summary>
+        /// Add multiple http message handlers to processing pipeline
+        /// </summary>
+        /// <exception cref="T:System.ArgumentNullException">One of items in <paramref name="handlers"/> is <see langword="null"/></exception>
+        IHttpClientBuilder WithMessageHandlers(IEnumerable<DelegatingHandler> handlers);
 
         /// <summary>
         /// Add exception handler to possibly transform thrown <see cref="HttpRequestException"/> into more user-friendly ones (or add more details)

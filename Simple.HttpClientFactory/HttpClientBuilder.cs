@@ -1,5 +1,4 @@
 ﻿using Polly;
-using Simple.HttpClientFactory.Polly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Net.Security;
 #endif
 using System.Security.Cryptography.X509Certificates;
+using Simple.HttpClientFactory.MessageHandlers;
 
 namespace Simple.HttpClientFactory
 {
@@ -71,10 +71,13 @@ namespace Simple.HttpClientFactory
         public IHttpClientBuilder WithMessageExceptionHandler(
                 Func<HttpRequestException, bool> exceptionHandlingPredicate,
                 Func<HttpRequestException, Exception> exceptionHandler) =>
-            WithMessageHandler(new MessageExceptionHandler(exceptionHandlingPredicate, exceptionHandler, null));
+            WithMessageHandler(new ExceptionTranslatorRequestMiddleware(exceptionHandlingPredicate, exceptionHandler, null));
 
+        /// <exception cref="T:System.ArgumentNullException"><paramref name="handler"/> is <see langword="null"/></exception>
         public IHttpClientBuilder WithMessageHandler(DelegatingHandler handler)
         {
+            if(handler == null)
+                throw new ArgumentNullException(nameof(handler));
             if(_middlewareHandlers.Count > 0)
                 _middlewareHandlers.Last().InnerHandler = handler;
             _middlewareHandlers.Add(handler);
@@ -94,7 +97,7 @@ namespace Simple.HttpClientFactory
         //see https://github.com/dotnet/extensions/issues/1345#issuecomment-607490721
         public HttpClient Build(Action<SocketsHttpHandler> clientHandlerConfigurator = null)
         {
-            PolicyHttpMessageHandler policyHandler = null;
+            PollyMessageMiddleware rootPolicyHandler = null;
             
             var clientHandler = new SocketsHttpHandler
             {
@@ -119,16 +122,16 @@ namespace Simple.HttpClientFactory
 
             for(int i = 0; i < _policies.Count; i++)
             {
-                if(policyHandler == null)
-                    policyHandler = new PolicyHttpMessageHandler(_policies[i], clientHandler);
+                if(rootPolicyHandler == null)
+                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], clientHandler);
                 else
                 {
-                    var @new = new PolicyHttpMessageHandler(_policies[i], policyHandler);
-                    policyHandler = @new;
+                    var @new = new PollyMessageMiddleware(_policies[i], rootPolicyHandler);
+                    rootPolicyHandler = @new;
                 }
             }       
 
-            var client = ConstructClientWithMiddleware(clientHandler, policyHandler);
+            var client = ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
 
             if(_timeout.HasValue)
                 client.Timeout = _timeout.Value;
@@ -138,29 +141,33 @@ namespace Simple.HttpClientFactory
 
         #else
 
+        /// <exception cref="T:System.Exception">A <paramref name="clientHandlerConfigurator"/> throws an exception.</exception>
         public HttpClient Build(Action<HttpClientHandler> clientHandlerConfigurator = null)
         {
 
             var clientHandler = new HttpClientHandlerEx();
 
             if (_certificates.Count > 0)
-                clientHandler.ClientCertificates.AddRange(_certificates.ToArray());
+            {
+                for (int i = 0; i < _certificates.Count; i++) 
+                    clientHandler.ClientCertificates.Add(_certificates[i]);
+            }
 
             clientHandlerConfigurator?.Invoke(clientHandler);
 
-            PolicyHttpMessageHandler policyHandler = null;
+            PollyMessageMiddleware rootPolicyHandler = null;
             for (int i = 0; i < _policies.Count; i++)
             {
-                if (policyHandler == null)
-                    policyHandler = new PolicyHttpMessageHandler(_policies[i], clientHandler);
+                if (rootPolicyHandler == null)
+                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], clientHandler);
                 else
                 {
-                    var @new = new PolicyHttpMessageHandler(_policies[i], policyHandler);
-                    policyHandler = @new;
+                    var @new = new PollyMessageMiddleware(_policies[i], rootPolicyHandler);
+                    rootPolicyHandler = @new;
                 }
             }
 
-            var client = ConstructClientWithMiddleware(clientHandler, policyHandler);
+            var client = ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
             
             if (_timeout.HasValue)
                 client.Timeout = _timeout.Value;
@@ -168,38 +175,66 @@ namespace Simple.HttpClientFactory
             return client;
         }
 #endif
-        private HttpClient ConstructClientWithMiddleware<TClientHandler>(TClientHandler clientHandler, PolicyHttpMessageHandler policyHandler)
+        private HttpClient ConstructClientWithMiddleware<TClientHandler>(TClientHandler clientHandler, PollyMessageMiddleware rootPolicyHandler)
             where TClientHandler : HttpMessageHandler
         {
             HttpClient client;
-            if (policyHandler != null)
+            client = CreateClientInternal(clientHandler, rootPolicyHandler, _middlewareHandlers.LastOrDefault());
+
+            InitializeDefaultHeadersIfNeeded();
+
+            return client;
+
+
+            void InitializeDefaultHeadersIfNeeded()
             {
+                if (_defaultHeaders.Count > 0)
+                {
+                    foreach (var header in _defaultHeaders)
+                    {
+                        if (!client.DefaultRequestHeaders.Contains(header.Key))
+                            client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    }
+                }
+            }
+        }
+
+        private HttpClient CreateClientInternal<TClientHandler>(TClientHandler clientHandler,
+            PollyMessageMiddleware rootPolicyHandler, DelegatingHandler lastMiddleware) where TClientHandler : HttpMessageHandler
+        {
+            HttpClient InitializeClientWithPoliciesAndMiddleware()
+            {
+                HttpClient client;
                 if (_middlewareHandlers.Count > 0)
                 {
-                    _middlewareHandlers.LastOrDefault().InnerHandler = policyHandler;
+                    if(lastMiddleware == null)
+                        throw new InvalidOperationException("One or more middleware handlers is null. This is not supposed to happen!");
+
+                    lastMiddleware.InnerHandler = rootPolicyHandler;
                     client = new HttpClient(_middlewareHandlers.FirstOrDefault(), true);
                 }
                 else
-                    client = new HttpClient(policyHandler, true);
+                    client = new HttpClient(rootPolicyHandler, true);
+
+                return client;
             }
+
+            HttpClient InitializeClientOnlyWithMiddleware()
+            {
+                lastMiddleware.InnerHandler = clientHandler;
+                var client = new HttpClient(_middlewareHandlers.FirstOrDefault(), true);
+                return client;
+            }
+
+            HttpClient createdClient;
+            if (rootPolicyHandler != null)
+                createdClient = InitializeClientWithPoliciesAndMiddleware();
             else if (_middlewareHandlers.Count > 0)
-            {
-                _middlewareHandlers.LastOrDefault().InnerHandler = clientHandler;
-                client = new HttpClient(_middlewareHandlers.FirstOrDefault(), true);
-            }
+                createdClient = InitializeClientOnlyWithMiddleware();
             else
-                client = new HttpClient(clientHandler, true);
+                createdClient = new HttpClient(clientHandler, true);
 
-            if(_defaultHeaders.Count > 0)
-            {
-                foreach(var header in _defaultHeaders)
-                {
-                    if(!client.DefaultRequestHeaders.Contains(header.Key))
-                        client.DefaultRequestHeaders.Add(header.Key, header.Value);
-                }
-            }
-
-            return client;
+            return createdClient;
         }
     }
 }

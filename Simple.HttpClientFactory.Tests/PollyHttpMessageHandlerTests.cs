@@ -1,11 +1,11 @@
 ﻿using Polly;
-using Simple.HttpClientFactory.Polly;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Simple.HttpClientFactory.MessageHandlers;
 using Xunit;
 
 namespace Simple.HttpClientFactory.Tests
@@ -15,12 +15,12 @@ namespace Simple.HttpClientFactory.Tests
     {
         [Fact]
         public void Ctor_with_null_should_throw() => 
-            Assert.Throws<ArgumentNullException>(() => new PolicyHttpMessageHandler(null));
+            Assert.Throws<ArgumentNullException>(() => new PollyMessageMiddleware(null));
 
         [Fact]
         public async Task Null_param_in_send_async_should_throw() 
         {
-            var middlewareHandler = new PolicyHttpMessageHandler(Policy<HttpResponseMessage>
+            var middlewareHandler = new PollyMessageMiddleware(Policy<HttpResponseMessage>
                             .Handle<HttpRequestException>()
                             .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
                             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)));

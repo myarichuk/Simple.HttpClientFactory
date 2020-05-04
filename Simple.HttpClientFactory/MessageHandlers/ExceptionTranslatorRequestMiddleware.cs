@@ -3,9 +3,9 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Simple.HttpClientFactory
+namespace Simple.HttpClientFactory.MessageHandlers
 {
-    public class MessageExceptionHandler : DelegatingHandler
+    public class ExceptionTranslatorRequestMiddleware : DelegatingHandler
     {
         private readonly Func<HttpRequestException, bool> _exceptionHandlingPredicate;
         private readonly Func<HttpRequestException, Exception> _exceptionHandler;
@@ -13,7 +13,7 @@ namespace Simple.HttpClientFactory
         public event EventHandler<HttpRequestException> RequestException;
         public event EventHandler<Exception> TransformedRequestException;
 
-        public MessageExceptionHandler(
+        public ExceptionTranslatorRequestMiddleware(
             Func<HttpRequestException, bool> exceptionHandlingPredicate,
             Func<HttpRequestException, Exception> exceptionHandler, DelegatingHandler handler)  : base(handler)
         {
