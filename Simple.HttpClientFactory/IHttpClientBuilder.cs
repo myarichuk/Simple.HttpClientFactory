@@ -76,6 +76,12 @@ namespace Simple.HttpClientFactory
         /// <param name="clientHandlerConfigurator">Configure the default message handler before the client is actually created</param>
         HttpClient Build(Action<SocketsHttpHandler> clientHandlerConfigurator = null);
 
+        /// <summary>
+        /// Actually create the client with the actual message handler to be used
+        /// </summary>
+        /// <param name="clientHandler">Client handler instance to use</param>
+        HttpClient Build(SocketsHttpHandler clientHandler);
+
         #else
 
         /// <summary>
@@ -83,6 +89,12 @@ namespace Simple.HttpClientFactory
         /// </summary>
         /// <param name="clientHandlerConfigurator">Configure the default message handler before the client is actually created</param>
         HttpClient Build(Action<HttpClientHandler> clientHandlerConfigurator = null);
+
+        /// <summary>
+        /// Actually create the client with the actual message handler to be used
+        /// </summary>
+        /// <param name="clientHandler">Client handler instance to use</param>
+        HttpClient Build(HttpClientHandler clientHandler);
 
         #endif
     }

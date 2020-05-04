@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Simple.HttpClientFactory.MessageHandlers;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
@@ -43,6 +44,20 @@ namespace Simple.HttpClientFactory.Tests
             Assert.Equal("xyz123", trafficRecorder.Traffic[0].Item1.Headers.GetValues("foobar").FirstOrDefault());
         }
 
+#if NET472
+        [Fact]
+        public async Task HttpClient_will_cache_visited_urls()
+        {
+            var clientHandler = new HttpClientHandlerEx();
+            var client = HttpClientFactory.Create().Build(clientHandler);
+
+            var response = await client.GetAsync(_server.Urls[0] + "/hello/world");
+
+            Assert.Single(clientHandler.AlreadySeenAddresses);
+            Assert.True(clientHandler.AlreadySeenAddresses.First() ==
+                new HttpClientHandlerEx.UriCacheKey(new Uri(_server.Urls[0] + "/hello/world")));
+        }
+#endif
 
         [Fact]
         public async Task Can_do_http_get_with_plain_client()

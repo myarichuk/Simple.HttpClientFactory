@@ -7,11 +7,12 @@ using System.Threading.Tasks;
 
 namespace Simple.HttpClientFactory.MessageHandlers
 {
+    #if NETSTANDARD2_0
     //credit: the idea for storing visited addresses in hash set is taken from https://github.com/NimaAra/Easy.Common/blob/master/Easy.Common/RestClient.cs#L570
     //note: Easy.Common is licensed with MIT License (https://github.com/NimaAra/Easy.Common/blob/master/LICENSE)
     public class HttpClientHandlerEx : HttpClientHandler
     {
-        private readonly HashSet<UriCacheKey> _alreadySeenAddresses = new HashSet<UriCacheKey>();
+        public readonly HashSet<UriCacheKey> AlreadySeenAddresses = new HashSet<UriCacheKey>();
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -30,17 +31,17 @@ namespace Simple.HttpClientFactory.MessageHandlers
             if (!endpoint.IsAbsoluteUri) { return; }
             
             var key = new UriCacheKey(endpoint);
-            lock (_alreadySeenAddresses)
+            lock (AlreadySeenAddresses)
             {
-                if (_alreadySeenAddresses.Contains(key)) { return; }
+                if (AlreadySeenAddresses.Contains(key)) { return; }
 
                 ServicePointManager.FindServicePoint(endpoint)
                     .ConnectionLeaseTimeout = (int)Constants.ConnectionLifeTime.TotalMilliseconds;
-                _alreadySeenAddresses.Add(key);
+                AlreadySeenAddresses.Add(key);
             }
         }
 
-        private struct UriCacheKey : IEquatable<UriCacheKey>
+        public struct UriCacheKey : IEquatable<UriCacheKey>
         {
             private readonly Uri _uri;
 
@@ -57,4 +58,6 @@ namespace Simple.HttpClientFactory.MessageHandlers
             public static bool operator !=(UriCacheKey left, UriCacheKey right) => !left.Equals(right);
         }
     }
+
+    #endif
 }

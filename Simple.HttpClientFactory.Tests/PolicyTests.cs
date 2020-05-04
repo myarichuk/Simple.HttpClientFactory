@@ -49,7 +49,7 @@ namespace Simple.HttpClientFactory.Tests
 					.WithStatusCode(408));
         }
 
-		[Fact]
+        [Fact]
 		public async Task Client_with_retry_and_timeout_policy_should_properly_apply_policies()
 		{
 			//timeout after 2 secons, then retry

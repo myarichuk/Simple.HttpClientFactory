@@ -92,45 +92,23 @@ namespace Simple.HttpClientFactory
         }
 
         #if NETCOREAPP2_1
-        
+
+        public HttpClient Build(SocketsHttpHandler clientHandler)
+        {
+            InitializeClientHandler(clientHandler, out var rootPolicyHandler);
+            return ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
+        }
+
         //ServicePointManager in .Net Core is a no-op so we need to do this
         //see https://github.com/dotnet/extensions/issues/1345#issuecomment-607490721
+        /// <exception cref="T:System.Exception">A <paramref name="clientHandlerConfigurator"/> throws an exception.</exception>
         public HttpClient Build(Action<SocketsHttpHandler> clientHandlerConfigurator = null)
         {
-            PollyMessageMiddleware rootPolicyHandler = null;
-            
-            var clientHandler = new SocketsHttpHandler
-            {
-                // https://github.com/dotnet/corefx/issues/26895
-                PooledConnectionLifetime = Constants.ConnectionLifeTime,
-                PooledConnectionIdleTimeout = Constants.ConnectionLifeTime,
-                MaxConnectionsPerServer = Constants.MaxConnectionsPerServer
-            };
-            
-            if(_certificates.Count > 0)
-            {
-                clientHandler.SslOptions = new SslClientAuthenticationOptions()
-                {
-                    ClientCertificates = new X509CertificateCollection()
-                };
-
-                for(int i = 0; i < _certificates.Count; i++)
-                    clientHandler.SslOptions.ClientCertificates.Add(_certificates[i]);
-            }
+            var clientHandler = new SocketsHttpHandler();
+            InitializeClientHandler(clientHandler, out var rootPolicyHandler);
 
             clientHandlerConfigurator?.Invoke(clientHandler);
-
-            for(int i = 0; i < _policies.Count; i++)
-            {
-                if(rootPolicyHandler == null)
-                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], clientHandler);
-                else
-                {
-                    var @new = new PollyMessageMiddleware(_policies[i], rootPolicyHandler);
-                    rootPolicyHandler = @new;
-                }
-            }       
-
+            
             var client = ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
 
             if(_timeout.HasValue)
@@ -139,23 +117,26 @@ namespace Simple.HttpClientFactory
             return client;
         }
 
-        #else
-
-        /// <exception cref="T:System.Exception">A <paramref name="clientHandlerConfigurator"/> throws an exception.</exception>
-        public HttpClient Build(Action<HttpClientHandler> clientHandlerConfigurator = null)
+        private void InitializeClientHandler(SocketsHttpHandler clientHandler, out PollyMessageMiddleware rootPolicyHandler)
         {
+            rootPolicyHandler = null;
 
-            var clientHandler = new HttpClientHandlerEx();
+            clientHandler.MaxConnectionsPerServer = Constants.MaxConnectionsPerServer;
+            clientHandler.PooledConnectionIdleTimeout = Constants.ConnectionLifeTime;
+            clientHandler.PooledConnectionLifetime = Constants.ConnectionLifeTime;
 
             if (_certificates.Count > 0)
             {
-                for (int i = 0; i < _certificates.Count; i++) 
-                    clientHandler.ClientCertificates.Add(_certificates[i]);
+                clientHandler.SslOptions = new SslClientAuthenticationOptions()
+                {
+                    ClientCertificates = new X509CertificateCollection()
+                };
+
+                for (int i = 0; i < _certificates.Count; i++)
+                    clientHandler.SslOptions.ClientCertificates.Add(_certificates[i]);
             }
 
-            clientHandlerConfigurator?.Invoke(clientHandler);
 
-            PollyMessageMiddleware rootPolicyHandler = null;
             for (int i = 0; i < _policies.Count; i++)
             {
                 if (rootPolicyHandler == null)
@@ -167,12 +148,52 @@ namespace Simple.HttpClientFactory
                 }
             }
 
+        }
+
+#else
+
+        public HttpClient Build(HttpClientHandler clientHandler)
+        {
+            InitializeClientHandler(clientHandler, out var rootPolicyHandler);
+            return ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
+        }
+
+        /// <exception cref="T:System.Exception">A <paramref name="clientHandlerConfigurator"/> throws an exception.</exception>
+        public HttpClient Build(Action<HttpClientHandler> clientHandlerConfigurator = null)
+        {
+            var clientHandler = new HttpClientHandlerEx();
+
+            InitializeClientHandler(clientHandler, out var rootPolicyHandler);
+
+            clientHandlerConfigurator?.Invoke(clientHandler);
             var client = ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
             
             if (_timeout.HasValue)
                 client.Timeout = _timeout.Value;
 
             return client;
+        }
+
+        private void InitializeClientHandler(HttpClientHandler clientHandler, out PollyMessageMiddleware rootPolicyHandler)
+        {
+            if (_certificates.Count > 0)
+            {
+                for (int i = 0; i < _certificates.Count; i++)
+                    clientHandler.ClientCertificates.Add(_certificates[i]);
+            }
+
+
+            rootPolicyHandler = null;
+            for (int i = 0; i < _policies.Count; i++)
+            {
+                if (rootPolicyHandler == null)
+                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], clientHandler);
+                else
+                {
+                    var @new = new PollyMessageMiddleware(_policies[i], rootPolicyHandler);
+                    rootPolicyHandler = @new;
+                }
+            }
         }
 #endif
         private HttpClient ConstructClientWithMiddleware<TClientHandler>(TClientHandler clientHandler, PollyMessageMiddleware rootPolicyHandler)
@@ -182,6 +203,9 @@ namespace Simple.HttpClientFactory
             client = CreateClientInternal(clientHandler, rootPolicyHandler, _middlewareHandlers.LastOrDefault());
 
             InitializeDefaultHeadersIfNeeded();
+
+            if(_timeout.HasValue)
+                client.Timeout = _timeout.Value;
 
             return client;
 
