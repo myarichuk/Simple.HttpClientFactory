@@ -15,6 +15,15 @@ namespace Simple.HttpClientFactory.MessageHandlers
 
         public ExceptionTranslatorRequestMiddleware(
             Func<HttpRequestException, bool> exceptionHandlingPredicate,
+            Func<HttpRequestException, Exception> exceptionHandler) 
+        {
+            _exceptionHandlingPredicate = exceptionHandlingPredicate ?? throw new ArgumentNullException(nameof(exceptionHandlingPredicate));
+            _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
+        }
+
+
+        public ExceptionTranslatorRequestMiddleware(
+            Func<HttpRequestException, bool> exceptionHandlingPredicate,
             Func<HttpRequestException, Exception> exceptionHandler, DelegatingHandler handler)  : base(handler)
         {
             _exceptionHandlingPredicate = exceptionHandlingPredicate ?? throw new ArgumentNullException(nameof(exceptionHandlingPredicate));

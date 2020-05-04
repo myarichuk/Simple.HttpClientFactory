@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
@@ -25,6 +26,7 @@ namespace Simple.HttpClientFactory.Tests
                           .WithHeader("Content-Type", "text/plain")
                           .WithBody("Hello world!"));         
         }
+
 
         [Fact]
         public async Task Single_middleware_handler_should_work()

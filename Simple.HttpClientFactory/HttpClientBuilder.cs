@@ -71,7 +71,7 @@ namespace Simple.HttpClientFactory
         public IHttpClientBuilder WithMessageExceptionHandler(
                 Func<HttpRequestException, bool> exceptionHandlingPredicate,
                 Func<HttpRequestException, Exception> exceptionHandler) =>
-            WithMessageHandler(new ExceptionTranslatorRequestMiddleware(exceptionHandlingPredicate, exceptionHandler, null));
+            WithMessageHandler(new ExceptionTranslatorRequestMiddleware(exceptionHandlingPredicate, exceptionHandler));
 
         /// <exception cref="T:System.ArgumentNullException"><paramref name="handler"/> is <see langword="null"/></exception>
         public IHttpClientBuilder WithMessageHandler(DelegatingHandler handler)

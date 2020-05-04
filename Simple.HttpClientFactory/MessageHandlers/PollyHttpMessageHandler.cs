@@ -45,22 +45,29 @@ namespace Simple.HttpClientFactory.MessageHandlers
             var cleanUpContext = false;
             var context = GetOrCreatePolicyExecutionContext(request, ref cleanUpContext);
 
-            return _policy.ExecuteAsync(
-                async (c, ct) => await base.SendAsync(request, cancellationToken), context, cancellationToken)
-                .ContinueWith(t =>
-                {
-                    if(cleanUpContext)
-                        request.SetPolicyExecutionContext(null);
-                    return t.Result;
-                }, cancellationToken);
+            //do not await for the task so the async state machine won't grow big
+            var responseTask = 
+                _policy.ExecuteAsync(
+                    async (c, ct) => 
+                            await base.SendAsync(request, cancellationToken), context, cancellationToken)
+                       .ContinueWith(t =>
+                       {
+                           if(cleanUpContext)
+                               request.SetPolicyExecutionContext(null);
+                           return t.Result;
+                       }, cancellationToken);
 
-            Context GetOrCreatePolicyExecutionContext(HttpRequestMessage httpRequestMessage, ref bool b)
+            responseTask.ConfigureAwait(false);
+
+            return responseTask;
+
+            Context GetOrCreatePolicyExecutionContext(HttpRequestMessage httpRequestMessage, ref bool shouldCleanupContext)
             {
                 if (!httpRequestMessage.TryGetPolicyExecutionContext(out var fetchedContext))
                 {
                     fetchedContext = new Context();
                     httpRequestMessage.SetPolicyExecutionContext(fetchedContext);
-                    b = true;
+                    shouldCleanupContext = true;
                 }
 
                 return fetchedContext;
