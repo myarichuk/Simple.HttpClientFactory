@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETSTANDARD2_0
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -7,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace Simple.HttpClientFactory.MessageHandlers
 {
-    #if NETSTANDARD2_0
     //credit: the idea for storing visited addresses in hash set is taken from https://github.com/NimaAra/Easy.Common/blob/master/Easy.Common/RestClient.cs#L570
     //note: Easy.Common is licensed with MIT License (https://github.com/NimaAra/Easy.Common/blob/master/LICENSE)
     public class HttpClientHandlerEx : HttpClientHandler
@@ -61,5 +61,5 @@ namespace Simple.HttpClientFactory.MessageHandlers
         }
     }
 
-    #endif
 }
+#endif
