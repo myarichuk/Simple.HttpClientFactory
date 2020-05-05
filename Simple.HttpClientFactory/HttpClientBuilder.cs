@@ -15,6 +15,7 @@ namespace Simple.HttpClientFactory
     internal class HttpClientBuilder : IHttpClientBuilder
     {        
         private TimeSpan? _timeout;
+        private Uri _baseUrl;
         private readonly List<X509Certificate2> _certificates = new List<X509Certificate2>();
         private readonly List<IAsyncPolicy<HttpResponseMessage>> _policies = new List<IAsyncPolicy<HttpResponseMessage>>();
         private readonly List<DelegatingHandler> _middlewareHandlers = new List<DelegatingHandler>();
@@ -26,6 +27,12 @@ namespace Simple.HttpClientFactory
             if(!_defaultHeaders.ContainsKey(name))
                 _defaultHeaders.Add(name, value);
 
+            return this;
+        }
+
+        public IHttpClientBuilder WithBaseUrl(Uri baserUrl)
+        {
+            _baseUrl = new Uri(baserUrl.ToString());
             return this;
         }
 
@@ -257,6 +264,9 @@ namespace Simple.HttpClientFactory
                 createdClient = InitializeClientOnlyWithMiddleware();
             else
                 createdClient = new HttpClient(clientHandler, true);
+
+            if(_baseUrl != null)
+                createdClient.BaseAddress = _baseUrl;
 
             return createdClient;
         }

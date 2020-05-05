@@ -9,6 +9,11 @@ namespace Simple.HttpClientFactory
     public interface IHttpClientBuilder
     {
         /// <summary>
+        /// Specify base url to use in the client
+        /// </summary>
+        IHttpClientBuilder WithBaseUrl(Uri baserUrl);
+
+        /// <summary>
         /// Add default headers to be added to each request
         /// </summary>
         IHttpClientBuilder WithDefaultHeader(string name, string value);

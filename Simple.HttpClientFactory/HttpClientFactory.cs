@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 
 namespace Simple.HttpClientFactory
 {
@@ -18,5 +19,14 @@ namespace Simple.HttpClientFactory
         /// <returns></returns>
         public static IHttpClientBuilder Create(params DelegatingHandler[] handlers) =>
             new HttpClientBuilder().WithMessageHandlers(handlers);
+
+        /// <summary>
+        /// Create HttpClient builder with initial message processing pipeline
+        /// </summary>
+        /// <param name="baseUrl">Base url to use in the client</param>
+        /// <param name="handlers">Http message handlers to chain into HttpClient's processing pipeline</param>
+        /// <returns></returns>
+        public static IHttpClientBuilder Create(Uri baseUrl, params DelegatingHandler[] handlers) =>
+            new HttpClientBuilder().WithMessageHandlers(handlers).WithBaseUrl(baseUrl);
     }
 }

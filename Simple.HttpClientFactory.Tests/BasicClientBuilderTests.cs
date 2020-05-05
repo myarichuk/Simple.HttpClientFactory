@@ -70,6 +70,27 @@ namespace Simple.HttpClientFactory.Tests
         }
 
         [Fact]
+        public async Task Can_do_http_get_with_plain_client_with_base_url()
+        {
+            var client = HttpClientFactory.Create(new Uri(_server.Urls[0])).Build();
+            var response = await client.GetAsync("/hello/world");
+            
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("Hello world!", await response.Content.ReadAsStringAsync());
+        }
+
+        [Fact]
+        public async Task Can_do_http_get_with_plain_client_with_base_url_alternative_syntax()
+        {
+            var client = HttpClientFactory.Create().WithBaseUrl(new Uri(_server.Urls[0])).Build();
+            var response = await client.GetAsync("/hello/world");
+            
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("Hello world!", await response.Content.ReadAsStringAsync());
+        }
+
+
+        [Fact]
         public async Task Can_do_http_post_with_plain_client()
         {
             var client = HttpClientFactory.Create().Build();
