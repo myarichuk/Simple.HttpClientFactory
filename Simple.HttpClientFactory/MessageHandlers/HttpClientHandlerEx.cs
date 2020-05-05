@@ -12,7 +12,9 @@ namespace Simple.HttpClientFactory.MessageHandlers
     //note: Easy.Common is licensed with MIT License (https://github.com/NimaAra/Easy.Common/blob/master/LICENSE)
     public class HttpClientHandlerEx : HttpClientHandler
     {
-        public readonly HashSet<UriCacheKey> AlreadySeenAddresses = new HashSet<UriCacheKey>();
+        private readonly HashSet<UriCacheKey> _alreadySeenAddresses = new HashSet<UriCacheKey>();
+
+        public IReadOnlyCollection<UriCacheKey> AlreadySeenAddresses => _alreadySeenAddresses;
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -31,13 +33,13 @@ namespace Simple.HttpClientFactory.MessageHandlers
             if (!endpoint.IsAbsoluteUri) { return; }
             
             var key = new UriCacheKey(endpoint);
-            lock (AlreadySeenAddresses)
+            lock (_alreadySeenAddresses)
             {
-                if (AlreadySeenAddresses.Contains(key)) { return; }
+                if (_alreadySeenAddresses.Contains(key)) { return; }
 
                 ServicePointManager.FindServicePoint(endpoint)
                     .ConnectionLeaseTimeout = (int)Constants.ConnectionLifeTime.TotalMilliseconds;
-                AlreadySeenAddresses.Add(key);
+                _alreadySeenAddresses.Add(key);
             }
         }
 
