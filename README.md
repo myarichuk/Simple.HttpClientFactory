@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/myarichuk/Simple.HttpClientFactory.svg?branch=master)](https://travis-ci.org/myarichuk/Simple.HttpClientFactory)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=myarichuk_Simple.HttpClientFactory&metric=alert_status)](https://sonarcloud.io/dashboard?id=myarichuk_Simple.HttpClientFactory)
-![Nuget](https://img.shields.io/nuget/v/Simple.HttpClientFactory?color=light-green)  
+[![Nuget](https://img.shields.io/nuget/v/Simple.HttpClientFactory?color=light-green)  ](https://www.nuget.org/packages/Simple.HttpClientFactory/)
 
 ### The Why?
 A first question would be - why create another factory for ``HttpClient`` if Microsoft have already created an excellent library in ``Microsoft.Http.Extensions``?
