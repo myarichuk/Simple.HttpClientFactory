@@ -19,12 +19,11 @@ Using the client factory is simple, and pretty self-explanatory. Here is how ``H
 
 ```cs
 public HttpClient CreateClient() =>
-    HttpClientFactory
-        .Create()
-        .WithCertificate(DefaultDevCert.Get()) //configure with one or more X509Certificate2 instances
-        .WithPolicy(HttpPolicyExtensions //Polly error policy
-                        .HandleTransientHttpError() // add retry on HttpRequestException with 5XX and 408 codes
-                        .RetryAsync(3))
-        .Build();
+    HttpClientFactory.Create()
+                     .WithCertificate(DefaultDevCert.Get())         // configure with one or more X509Certificate2 instances
+                     .WithPolicy(Policy<HttpResponseMessage>.Handle<HttpRequestException>()
+                                                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                                                            .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
+                     .Build();
 
 ```
