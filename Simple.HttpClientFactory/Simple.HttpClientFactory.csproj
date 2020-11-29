@@ -11,27 +11,15 @@
     <RepositoryUrl>https://github.com/myarichuk/Simple.HttpClientFactory</RepositoryUrl>
     <RepositoryType>Github</RepositoryType>
     <ProjectGuid>{709E1EB5-F770-4569-B08A-7867035217F3}</ProjectGuid>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)|$(Platform)'=='netstandard2.0|AnyCPU'">
     <CodeAnalysisRuleSet>Simple.HttpClientFactory.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)|$(Platform)'=='netcoreapp2.1|AnyCPU'">
-    <CodeAnalysisRuleSet>Simple.HttpClientFactory.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)|$(Platform)'=='netstandard2.0|AnyCPU'">    
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.0" />
-    <PackageReference Include="Polly" Version="7.2.0" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="System.Net.Security" Version="4.3.2" />
+  <ItemGroup>
+    <PackageReference Include="Polly" Version="7.2.1" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)|$(Platform)'=='netcoreapp2.1|AnyCPU'">
-    <PackageReference Include="Polly" Version="7.2.0" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="System.Net.Security" Version="4.3.2" />
+  <ItemGroup Condition="'$(TargetFramework)|$(Platform)'=='netstandard2.0|AnyCPU'">
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
