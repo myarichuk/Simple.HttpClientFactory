@@ -7,4 +7,4 @@ echo "Displaying file structure..."
 find .
 ls -l tools/sonar
 echo "Changing permissions..."
-chmod +x tools/sonar/sonar-scanner-5.0.4.24009/bin/sonar-scanner
+chmod +x tools/sonar/sonar-scanner-4.4.0.2170/bin/sonar-scanner
