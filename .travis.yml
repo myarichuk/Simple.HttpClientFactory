@@ -8,5 +8,8 @@ before_install:
 install:
   - dotnet restore
 script:
-- bash apt-get install -y dotnet-runtime-3.1
+- bash apt-get update
+- bash apt-get install -y apt-transport-https
+- bash apt-get update
+- bash apt-get install -y dotnet-sdk-3.1
 - bash ./tools/travis-ci-build.sh
