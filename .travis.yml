@@ -4,7 +4,8 @@ mono: none
 dist: focal
 dotnet: 5.0.100
 install:
-  - dotnet tool install dotnet-sonarscanner
+  - dotnet new tool-manifest
+  - dotnet tool install --local dotnet-sonarscanner
   - dotnet restore
 script:
 - bash ./tools/travis-ci-build.sh
