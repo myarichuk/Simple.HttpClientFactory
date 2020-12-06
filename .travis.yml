@@ -12,6 +12,7 @@ install:
   - dotnet restore
 before_script:
 - export GitVersion_FullSemVer=$(docker run --rm -v "$(pwd):/repo" gittools/gitversion:5.3.5-linux-alpine.3.10-x64-netcoreapp3.1 -output json -showvariable FullSemVer)
+- echo "GitVersion generated '$GitVersion_FullSemVer'"
 script:
 - bash ./tools/travis-ci-build.sh
 - bash ./tools/travis-ci-publish-nuget.sh
