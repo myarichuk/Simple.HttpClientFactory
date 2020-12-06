@@ -15,11 +15,3 @@ before_script:
 script:
 - bash ./tools/travis-ci-build.sh
 - bash ./tools/travis-ci-publish-nuget.sh
-before_deploy:
-  - git tag $GitVersion_FullSemVer
-deploy:
-  provider: releases
-  api_key: "${GITHUB_API}"
-  skip_cleanup: true
-  on:
-    tags: true  
