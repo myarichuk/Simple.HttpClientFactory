@@ -3,9 +3,14 @@ solution: Simple.HttpClientFactory.sln
 mono: none
 dist: bionic
 dotnet: 5.0.100
+services:
+- docker
 install:
+  - docker pull gittools/gitversion:5.3.5-linux-alpine.3.10-x64-netcoreapp3.1
   - dotnet new tool-manifest
   - dotnet tool install --local dotnet-sonarscanner
   - dotnet restore
+before_script:
+- export GitVersion_FullSemVer=$(docker run --rm -v "$(pwd):/repo" gittools/gitversion:5.3.5-linux-alpine.3.10-x64-netcoreapp3.1 -output json -showvariable FullSemVer
 script:
 - bash ./tools/travis-ci-build.sh
