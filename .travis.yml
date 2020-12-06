@@ -11,7 +11,7 @@ install:
   - dotnet tool install --local dotnet-sonarscanner
   - dotnet restore
 before_script:
-- git fetch --prune
+- git fetch --unshallow
 - export GitVersion_FullSemVer=$(docker run --rm -v "$(pwd):/repo" gittools/gitversion:5.3.5-linux-alpine.3.10-x64-netcoreapp3.1 /repo -output json -showvariable SemVer)
 - echo "GitVersion generated '$GitVersion_FullSemVer'"
 script:
