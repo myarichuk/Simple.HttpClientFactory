@@ -14,140 +14,204 @@ namespace Simple.HttpClientFactory
 {
     internal class HttpClientBuilder : IHttpClientBuilder
     {        
-        private TimeSpan? _timeout;
         private Uri _baseUrl;
+        private readonly Dictionary<string, string> _defaultHeaders = new Dictionary<string, string>();
         private readonly List<X509Certificate2> _certificates = new List<X509Certificate2>();
         private readonly List<IAsyncPolicy<HttpResponseMessage>> _policies = new List<IAsyncPolicy<HttpResponseMessage>>();
+        private TimeSpan? _timeout;
         private readonly List<DelegatingHandler> _middlewareHandlers = new List<DelegatingHandler>();
-        private readonly Dictionary<string, string> _defaultHeaders = new Dictionary<string, string>();
+#if NETCOREAPP2_1
+        private Action<SocketsHttpHandler> _primaryMessageHandlerConfigurator;
+#else
+        private Action<HttpClientHandler> _primaryMessageHandlerConfigurator;
+#endif
+
+        public IHttpClientBuilder WithBaseUrl(string baseUrl)
+        {
+            return WithBaseUrl(new Uri(baseUrl));
+        }
+
+        public IHttpClientBuilder WithBaseUrl(Uri baseUrl)
+        {
+            _baseUrl = baseUrl ?? throw new ArgumentNullException(nameof(baseUrl));
+
+            return this;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IHttpClientBuilder WithDefaultHeader(string name, string value)
         {
-            if(!_defaultHeaders.ContainsKey(name))
+            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            if (!_defaultHeaders.ContainsKey(name))
                 _defaultHeaders.Add(name, value);
 
             return this;
         }
 
-        public IHttpClientBuilder WithBaseUrl(Uri baserUrl)
-        {
-            _baseUrl = new Uri(baserUrl.ToString());
-            return this;
-        }
-
         public IHttpClientBuilder WithDefaultHeaders(IReadOnlyDictionary<string, string> headers)
         {
+            if (headers == null) throw new ArgumentNullException(nameof(headers));
+
             foreach(var kvp in headers)
                 WithDefaultHeader(kvp.Key, kvp.Value);
 
             return this;
         }
 
+        private void WithCertificate(X509Certificate2 certificate)
+        {
+            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+
+            _certificates.Add(certificate);
+        }
+
+        public IHttpClientBuilder WithCertificate(params X509Certificate2[] certificate)
+        {
+            return WithCertificates(certificate);
+        }
+
         public IHttpClientBuilder WithCertificates(IEnumerable<X509Certificate2> certificates)
-        {                        
-            _certificates.AddRange(certificates);
+        {
+            if (certificates == null) throw new ArgumentNullException(nameof(certificates));
+
+            var certificateList = certificates.ToList();
+
+            if (!certificateList.Any()) throw new ArgumentException("The provided collection must contain at least one certificate", nameof(certificates));
+
+            foreach (var certificate in certificateList)
+                WithCertificate(certificate);
+
             return this;
         }
-        
-        public IHttpClientBuilder WithCertificate(params X509Certificate2[] certificates)
-        {                        
-            _certificates.AddRange(certificates);
-            return this;
+
+        private void WithPolicy(IAsyncPolicy<HttpResponseMessage> policy)
+        {
+            if (policy == null) throw new ArgumentNullException(nameof(policy));
+
+            _policies.Add(policy);
+        }
+
+        public IHttpClientBuilder WithPolicy(params IAsyncPolicy<HttpResponseMessage>[] policy)
+        {
+            return WithPolicies(policy);
         }
 
         public IHttpClientBuilder WithPolicies(IEnumerable<IAsyncPolicy<HttpResponseMessage>> policies)
         {
-            _policies.AddRange(policies);
-            return this;
-        }
+            if (policies == null) throw new ArgumentNullException(nameof(policies));
 
+            var policyList = policies.ToList();
 
-        public IHttpClientBuilder WithPolicy(IAsyncPolicy<HttpResponseMessage> policy)
-        {
-            _policies.Add(policy);
+            if (!policyList.Any()) throw new ArgumentException("The provided collection must contain at least one policy", nameof(policies));
+
+            foreach (var policy in policyList)
+                WithPolicy(policy);
+
             return this;
         }
 
         public IHttpClientBuilder WithTimeout(in TimeSpan timeout)
         {
             _timeout = timeout;
+
             return this;
         }
 
-        public IHttpClientBuilder WithMessageExceptionHandler(
-                Func<HttpRequestException, bool> exceptionHandlingPredicate,
-                Func<HttpRequestException, Exception> exceptionHandler) =>
-            WithMessageHandler(new ExceptionTranslatorRequestMiddleware(exceptionHandlingPredicate, exceptionHandler));
-
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="handler"/> is <see langword="null"/></exception>
-        public IHttpClientBuilder WithMessageHandler(DelegatingHandler handler)
+        private IHttpClientBuilder WithMessageHandler(DelegatingHandler handler)
         {
-            if(handler == null)
-                throw new ArgumentNullException(nameof(handler));
-            if(_middlewareHandlers.Count > 0)
-                _middlewareHandlers.Last().InnerHandler = handler;
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+
+            if (_middlewareHandlers.Count > 0) _middlewareHandlers.Last().InnerHandler = handler;
+
             _middlewareHandlers.Add(handler);
+
             return this;
+        }
+
+        public IHttpClientBuilder WithMessageHandler(params DelegatingHandler[] handler)
+        {
+            return WithMessageHandlers(handler);
         }
 
         public IHttpClientBuilder WithMessageHandlers(IEnumerable<DelegatingHandler> handlers)
         {
-            foreach(var handler in handlers)
+            if (handlers == null) throw new ArgumentNullException(nameof(handlers));
+
+            var handlerList = handlers.ToList();
+
+            if (!handlerList.Any()) throw new ArgumentException("The provided collection must contain at least one message handler", nameof(handlers));
+
+            foreach (var handler in handlerList)
                 WithMessageHandler(handler);
+
             return this;
         }
 
-        #if NETCOREAPP2_1
+        public IHttpClientBuilder WithMessageExceptionHandler(Func<HttpRequestException, bool> exceptionHandlingPredicate,
+                                                              Func<HttpRequestException, Exception> exceptionHandler,
+                                                              EventHandler<HttpRequestException> requestExceptionEventHandler = null,
+                                                              EventHandler<Exception> transformedRequestExceptionEventHandler = null) => WithMessageHandler(new ExceptionTranslatorRequestMiddleware(exceptionHandlingPredicate, exceptionHandler, requestExceptionEventHandler, transformedRequestExceptionEventHandler));
 
-        public HttpClient Build(SocketsHttpHandler clientHandler)
+#if NETCOREAPP2_1
+
+        public IHttpClientBuilder WithPrimaryMessageHandlerConfigurator(Action<SocketsHttpHandler> configurator)
         {
-            InitializeClientHandler(clientHandler, out var rootPolicyHandler);
-            return ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
+            _primaryMessageHandlerConfigurator = configurator ?? throw new ArgumentNullException(nameof(configurator));
+
+            return this;
+        }
+
+        public HttpClient Build(SocketsHttpHandler defaultPrimaryMessageHandler)
+        {
+            if (defaultPrimaryMessageHandler == null) throw new ArgumentNullException(nameof(defaultPrimaryMessageHandler));
+
+            InitializePrimaryMessageHandler(defaultPrimaryMessageHandler, out var rootPolicyHandler);
+
+            return ConstructClientWithMiddleware(defaultPrimaryMessageHandler, rootPolicyHandler);
         }
 
         //ServicePointManager in .Net Core is a no-op so we need to do this
         //see https://github.com/dotnet/extensions/issues/1345#issuecomment-607490721
-        /// <exception cref="T:System.Exception">A <paramref name="clientHandlerConfigurator"/> throws an exception.</exception>
-        public HttpClient Build(Action<SocketsHttpHandler> clientHandlerConfigurator = null)
+        public HttpClient Build(Action<SocketsHttpHandler> primaryMessageHandlerConfigurator = null)
         {
-            var clientHandler = new SocketsHttpHandler();
-            InitializeClientHandler(clientHandler, out var rootPolicyHandler);
+            var primaryMessageHandler = new SocketsHttpHandler();
+            InitializePrimaryMessageHandler(primaryMessageHandler, out var rootPolicyHandler);
 
-            clientHandlerConfigurator?.Invoke(clientHandler);
+            primaryMessageHandlerConfigurator?.Invoke(primaryMessageHandler);
             
-            var client = ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
+            var client = ConstructClientWithMiddleware(primaryMessageHandler, rootPolicyHandler);
 
-            if(_timeout.HasValue)
+            if (_timeout.HasValue)
                 client.Timeout = _timeout.Value;
 
             return client;
         }
 
-        private void InitializeClientHandler(SocketsHttpHandler clientHandler, out PollyMessageMiddleware rootPolicyHandler)
+        private void InitializePrimaryMessageHandler(SocketsHttpHandler primaryMessageHandler, out PollyMessageMiddleware rootPolicyHandler)
         {
             rootPolicyHandler = null;
 
-            clientHandler.MaxConnectionsPerServer = Constants.MaxConnectionsPerServer;
-            clientHandler.PooledConnectionIdleTimeout = Constants.ConnectionLifeTime;
-            clientHandler.PooledConnectionLifetime = Constants.ConnectionLifeTime;
+            primaryMessageHandler.MaxConnectionsPerServer = Constants.MaxConnectionsPerServer;
+            primaryMessageHandler.PooledConnectionIdleTimeout = Constants.ConnectionLifeTime;
+            primaryMessageHandler.PooledConnectionLifetime = Constants.ConnectionLifeTime;
 
             if (_certificates.Count > 0)
             {
-                clientHandler.SslOptions = new SslClientAuthenticationOptions()
+                primaryMessageHandler.SslOptions = new SslClientAuthenticationOptions()
                 {
                     ClientCertificates = new X509CertificateCollection()
                 };
 
                 for (int i = 0; i < _certificates.Count; i++)
-                    clientHandler.SslOptions.ClientCertificates.Add(_certificates[i]);
+                    primaryMessageHandler.SslOptions.ClientCertificates.Add(_certificates[i]);
             }
-
 
             for (int i = 0; i < _policies.Count; i++)
             {
                 if (rootPolicyHandler == null)
-                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], clientHandler);
+                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], primaryMessageHandler);
                 else
                 {
                     var @new = new PollyMessageMiddleware(_policies[i], rootPolicyHandler);
@@ -155,25 +219,35 @@ namespace Simple.HttpClientFactory
                 }
             }
 
+            _primaryMessageHandlerConfigurator?.Invoke(primaryMessageHandler);
         }
 
 #else
 
-        public HttpClient Build(HttpClientHandler clientHandler)
+        public IHttpClientBuilder WithPrimaryMessageHandlerConfigurator(Action<HttpClientHandler> configurator)
         {
-            InitializeClientHandler(clientHandler, out var rootPolicyHandler);
-            return ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
+            _primaryMessageHandlerConfigurator = configurator ?? throw new ArgumentNullException(nameof(configurator));
+
+            return this;
         }
 
-        /// <exception cref="T:System.Exception">A <paramref name="clientHandlerConfigurator"/> throws an exception.</exception>
-        public HttpClient Build(Action<HttpClientHandler> clientHandlerConfigurator = null)
+        public HttpClient Build(HttpClientHandler defaultPrimaryMessageHandler)
         {
-            var clientHandler = new HttpClientHandlerEx();
+            if (defaultPrimaryMessageHandler == null) throw new ArgumentNullException(nameof(defaultPrimaryMessageHandler));
 
-            InitializeClientHandler(clientHandler, out var rootPolicyHandler);
+            InitializePrimaryMessageHandler(defaultPrimaryMessageHandler, out var rootPolicyHandler);
 
-            clientHandlerConfigurator?.Invoke(clientHandler);
-            var client = ConstructClientWithMiddleware(clientHandler, rootPolicyHandler);
+            return ConstructClientWithMiddleware(defaultPrimaryMessageHandler, rootPolicyHandler);
+        }
+
+        public HttpClient Build(Action<HttpClientHandler> configurator = null)
+        {
+            var primaryMessageHandler = new HttpClientHandlerEx();
+
+            InitializePrimaryMessageHandler(primaryMessageHandler, out var rootPolicyHandler);
+
+            configurator?.Invoke(primaryMessageHandler);
+            var client = ConstructClientWithMiddleware(primaryMessageHandler, rootPolicyHandler);
             
             if (_timeout.HasValue)
                 client.Timeout = _timeout.Value;
@@ -181,12 +255,12 @@ namespace Simple.HttpClientFactory
             return client;
         }
 
-        private void InitializeClientHandler(HttpClientHandler clientHandler, out PollyMessageMiddleware rootPolicyHandler)
+        private void InitializePrimaryMessageHandler(HttpClientHandler primaryMessageHandler, out PollyMessageMiddleware rootPolicyHandler)
         {
             if (_certificates.Count > 0)
             {
                 for (int i = 0; i < _certificates.Count; i++)
-                    clientHandler.ClientCertificates.Add(_certificates[i]);
+                    primaryMessageHandler.ClientCertificates.Add(_certificates[i]);
             }
 
 
@@ -194,25 +268,26 @@ namespace Simple.HttpClientFactory
             for (int i = 0; i < _policies.Count; i++)
             {
                 if (rootPolicyHandler == null)
-                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], clientHandler);
+                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], primaryMessageHandler);
                 else
                 {
                     var @new = new PollyMessageMiddleware(_policies[i], rootPolicyHandler);
+
                     rootPolicyHandler = @new;
                 }
             }
+
+            _primaryMessageHandlerConfigurator?.Invoke(primaryMessageHandler);
         }
 #endif
-        private HttpClient ConstructClientWithMiddleware<TClientHandler>(TClientHandler clientHandler, PollyMessageMiddleware rootPolicyHandler)
-            where TClientHandler : HttpMessageHandler
+        private HttpClient ConstructClientWithMiddleware<TPrimaryMessageHandler>(TPrimaryMessageHandler primaryMessageHandler, PollyMessageMiddleware rootPolicyHandler)
+            where TPrimaryMessageHandler : HttpMessageHandler
         {
-            HttpClient client;
-            client = CreateClientInternal(clientHandler, rootPolicyHandler, _middlewareHandlers.LastOrDefault());
+            var client = CreateClientInternal(primaryMessageHandler, rootPolicyHandler, _middlewareHandlers.LastOrDefault());
 
             InitializeDefaultHeadersIfNeeded();
 
-            if(_timeout.HasValue)
-                client.Timeout = _timeout.Value;
+            if (_timeout.HasValue) client.Timeout = _timeout.Value;
 
             return client;
 
@@ -230,17 +305,15 @@ namespace Simple.HttpClientFactory
             }
         }
 
-        private HttpClient CreateClientInternal<TClientHandler>(TClientHandler clientHandler,
-            PollyMessageMiddleware rootPolicyHandler, DelegatingHandler lastMiddleware) where TClientHandler : HttpMessageHandler
+        private HttpClient CreateClientInternal<TPrimaryMessageHandler>(TPrimaryMessageHandler primaryMessageHandler, PollyMessageMiddleware rootPolicyHandler, DelegatingHandler lastMiddleware)
+            where TPrimaryMessageHandler : HttpMessageHandler
         {
             HttpClient InitializeClientWithPoliciesAndMiddleware()
             {
                 HttpClient client;
+
                 if (_middlewareHandlers.Count > 0)
                 {
-                    if(lastMiddleware == null)
-                        throw new InvalidOperationException("One or more middleware handlers is null. This is not supposed to happen!");
-
                     lastMiddleware.InnerHandler = rootPolicyHandler;
                     client = new HttpClient(_middlewareHandlers.FirstOrDefault(), true);
                 }
@@ -252,8 +325,9 @@ namespace Simple.HttpClientFactory
 
             HttpClient InitializeClientOnlyWithMiddleware()
             {
-                lastMiddleware.InnerHandler = clientHandler;
+                lastMiddleware.InnerHandler = primaryMessageHandler;
                 var client = new HttpClient(_middlewareHandlers.FirstOrDefault(), true);
+
                 return client;
             }
 
@@ -263,9 +337,9 @@ namespace Simple.HttpClientFactory
             else if (_middlewareHandlers.Count > 0)
                 createdClient = InitializeClientOnlyWithMiddleware();
             else
-                createdClient = new HttpClient(clientHandler, true);
+                createdClient = new HttpClient(primaryMessageHandler, true);
 
-            if(_baseUrl != null)
+            if (_baseUrl != null)
                 createdClient.BaseAddress = _baseUrl;
 
             return createdClient;

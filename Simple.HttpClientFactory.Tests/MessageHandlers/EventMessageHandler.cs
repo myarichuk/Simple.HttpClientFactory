@@ -1,4 +1,4 @@
-﻿namespace Simple.HttpClientFactory.Tests
+﻿namespace Simple.HttpClientFactory.Tests.MessageHandlers
 {
     using System;
     using System.Collections.Generic;
@@ -9,7 +9,7 @@
     /// <summary>
     /// Defines the <see cref="EventMessageHandler" />.
     /// </summary>
-    public class EventMessageHandler : DelegatingHandler
+    internal class EventMessageHandler : DelegatingHandler
     {
         /// <summary>
         /// Defines the Request.

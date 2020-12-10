@@ -70,26 +70,18 @@ namespace Simple.HttpClientFactory.Tests
 
         private static bool IsExportable(X509Certificate2 c)
         {
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                return true;
-            else
-            {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return true;
 #if XPLAT
                 // For the first run experience we don't need to know if the certificate can be exported.
                 return true;
 #else
-                return (c.GetRSAPrivateKey() is RSACryptoServiceProvider rsaPrivateKey &&
-                        rsaPrivateKey.CspKeyContainerInfo.Exportable) ||
-                    (c.GetRSAPrivateKey() is RSACng cngPrivateKey &&
-                        cngPrivateKey.Key.ExportPolicy == CngExportPolicies.AllowExport);
+                return    c.GetRSAPrivateKey() is RSACryptoServiceProvider rsaPrivateKey && rsaPrivateKey.CspKeyContainerInfo.Exportable
+                       || c.GetRSAPrivateKey() is RSACng cngPrivateKey && cngPrivateKey.Key.ExportPolicy == CngExportPolicies.AllowExport;
 #endif
-            }
         }
 
 
-        private static bool HasOid(X509Certificate2 certificate, string oid) =>
-                certificate.Extensions.OfType<X509Extension>()
-                    .Any(e => string.Equals(oid, e.Oid.Value, StringComparison.Ordinal));
+        private static bool HasOid(X509Certificate2 certificate, string oid) => certificate.Extensions.OfType<X509Extension>().Any(e => string.Equals(oid, e.Oid.Value, StringComparison.Ordinal));
 
     }
 }

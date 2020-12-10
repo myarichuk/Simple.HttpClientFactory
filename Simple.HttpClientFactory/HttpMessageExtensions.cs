@@ -9,7 +9,7 @@ namespace Simple.HttpClientFactory
 
         public static void SetPolicyExecutionContext(this HttpRequestMessage request, Context ctx)
         {
-            if(request.Properties.ContainsKey(PolicyExecutionContextKey))
+            if (request.Properties.ContainsKey(PolicyExecutionContextKey))
                 request.Properties[PolicyExecutionContextKey] = ctx;
             else
                 request.Properties.Add(PolicyExecutionContextKey, ctx);
@@ -18,7 +18,7 @@ namespace Simple.HttpClientFactory
         public static bool TryGetPolicyExecutionContext(this HttpRequestMessage request, out Context ctx)
         {
             ctx = default;
-            if(!request.Properties.TryGetValue(PolicyExecutionContextKey, out var genericContext))
+            if (!request.Properties.TryGetValue(PolicyExecutionContextKey, out var genericContext))
                 return false;
 
             ctx = genericContext as Context;

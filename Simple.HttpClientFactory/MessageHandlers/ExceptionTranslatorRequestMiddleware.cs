@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Simple.HttpClientFactory.MessageHandlers
 {
-    public class ExceptionTranslatorRequestMiddleware : DelegatingHandler
+    public sealed class ExceptionTranslatorRequestMiddleware : DelegatingHandler
     {
         private readonly Func<HttpRequestException, bool> _exceptionHandlingPredicate;
         private readonly Func<HttpRequestException, Exception> _exceptionHandler;
@@ -13,21 +13,12 @@ namespace Simple.HttpClientFactory.MessageHandlers
         public event EventHandler<HttpRequestException> RequestException;
         public event EventHandler<Exception> TransformedRequestException;
 
-        public ExceptionTranslatorRequestMiddleware(
-            Func<HttpRequestException, bool> exceptionHandlingPredicate,
-            Func<HttpRequestException, Exception> exceptionHandler) 
+        internal ExceptionTranslatorRequestMiddleware(Func<HttpRequestException, bool> exceptionHandlingPredicate, Func<HttpRequestException, Exception> exceptionHandler, EventHandler<HttpRequestException> requestExceptionEventHandler = null, EventHandler<Exception> transformedRequestExceptionEventHandler = null) 
         {
             _exceptionHandlingPredicate = exceptionHandlingPredicate ?? throw new ArgumentNullException(nameof(exceptionHandlingPredicate));
             _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
-        }
-
-
-        public ExceptionTranslatorRequestMiddleware(
-            Func<HttpRequestException, bool> exceptionHandlingPredicate,
-            Func<HttpRequestException, Exception> exceptionHandler, DelegatingHandler handler)  : base(handler)
-        {
-            _exceptionHandlingPredicate = exceptionHandlingPredicate ?? throw new ArgumentNullException(nameof(exceptionHandlingPredicate));
-            _exceptionHandler = exceptionHandler ?? throw new ArgumentNullException(nameof(exceptionHandler));
+            RequestException += requestExceptionEventHandler;
+            TransformedRequestException += transformedRequestExceptionEventHandler;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -37,27 +28,29 @@ namespace Simple.HttpClientFactory.MessageHandlers
             {
                 response = await base.SendAsync(request, cancellationToken);
                 response.EnsureSuccessStatusCode();
+
+                return response;
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 RequestException?.Invoke(this, e);
 
-                if(!_exceptionHandlingPredicate(e))
+                response?.Content.Dispose();
+
+                if (!_exceptionHandlingPredicate(e))
                 {
-                    response?.Content?.Dispose();
                     throw;
                 }
 
                 var transformed = _exceptionHandler(e);
-                if(transformed != null)
+                if (transformed != null)
                 {
-                    response?.Content?.Dispose();
                     TransformedRequestException?.Invoke(this, transformed);
                     throw transformed;
                 }
-            }
 
-            return response;
+                throw new Exception("Request exception transformation function cannot return null", e);
+            }
         }
     }
 }

@@ -7,26 +7,33 @@ namespace Simple.HttpClientFactory
     public static class HttpClientFactory
     {
         /// <summary>
-        /// Create HttpClient builder
+        /// Instantiates a new HTTP client builder.
         /// </summary>
-        /// <returns></returns>
         public static IHttpClientBuilder Create() => new HttpClientBuilder();
 
         /// <summary>
-        /// Create HttpClient builder with initial message processing pipeline
+        /// Instantiates a new HTTP client builder with the specified additional message handlers added to its processing pipeline.
         /// </summary>
-        /// <param name="handlers">Http message handlers to chain into HttpClient's processing pipeline</param>
-        /// <returns></returns>
-        public static IHttpClientBuilder Create(params DelegatingHandler[] handlers) =>
-            new HttpClientBuilder().WithMessageHandlers(handlers);
+        public static IHttpClientBuilder Create(params DelegatingHandler[] handlers) => new HttpClientBuilder().WithMessageHandlers(handlers);
 
         /// <summary>
-        /// Create HttpClient builder with initial message processing pipeline
+        /// Instantiates a new HTTP client builder with the specified base URL.
         /// </summary>
-        /// <param name="baseUrl">Base url to use in the client</param>
-        /// <param name="handlers">Http message handlers to chain into HttpClient's processing pipeline</param>
-        /// <returns></returns>
-        public static IHttpClientBuilder Create(Uri baseUrl, params DelegatingHandler[] handlers) =>
-            new HttpClientBuilder().WithMessageHandlers(handlers).WithBaseUrl(baseUrl);
+        public static IHttpClientBuilder Create(string baseUrl) => new HttpClientBuilder().WithBaseUrl(baseUrl);
+
+        /// <summary>
+        /// Instantiates a new HTTP client builder with the specified base URL and additional message handlers added to its processing pipeline.
+        /// </summary>
+        public static IHttpClientBuilder Create(Uri baseUrl) => new HttpClientBuilder().WithBaseUrl(baseUrl);
+
+        /// <summary>
+        /// Instantiates a new HTTP client builder with the specified base URL.
+        /// </summary>
+        public static IHttpClientBuilder Create(Uri baseUrl, params DelegatingHandler[] handlers) => new HttpClientBuilder().WithBaseUrl(baseUrl).WithMessageHandlers(handlers);
+
+        /// <summary>
+        /// Instantiates a new HTTP client builder with the specified base URL and additional message handlers added to its processing pipeline.
+        /// </summary>
+        public static IHttpClientBuilder Create(string baseUrl, params DelegatingHandler[] handlers) => new HttpClientBuilder().WithBaseUrl(baseUrl).WithMessageHandlers(handlers);
     }
 }
