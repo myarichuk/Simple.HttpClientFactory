@@ -1,4 +1,4 @@
-﻿namespace Simple.HttpClientFactory.Tests
+﻿namespace Simple.HttpClientFactory.Tests.MessageHandlers
 {
     using System.Collections.Generic;
     using System.Net.Http;
@@ -8,7 +8,7 @@
     /// <summary>
     /// Defines the <see cref="TrafficRecorderMessageHandler" />.
     /// </summary>
-    public class TrafficRecorderMessageHandler : DelegatingHandler
+    internal class TrafficRecorderMessageHandler : DelegatingHandler
     {
         /// <summary>
         /// Gets the Traffic.
@@ -36,6 +36,7 @@
         {
             request.Headers.Add("foobar", "foobar");
             var response = await base.SendAsync(request, cancellationToken);
+            response.Headers.Add("foobar", "foobar");
             _visitedMiddleware.Add(nameof(TrafficRecorderMessageHandler));
             Traffic.Add((request, response));
 

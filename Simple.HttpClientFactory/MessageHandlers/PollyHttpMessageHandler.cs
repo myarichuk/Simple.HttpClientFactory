@@ -1,12 +1,11 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Polly;
 
 namespace Simple.HttpClientFactory.MessageHandlers
 {
-   public class PollyMessageMiddleware : DelegatingHandler
+   public sealed class PollyMessageMiddleware : DelegatingHandler
     {
         private readonly IAsyncPolicy<HttpResponseMessage> _policy;
 
@@ -14,27 +13,14 @@ namespace Simple.HttpClientFactory.MessageHandlers
         /// Creates a new <see cref="PollyMessageMiddleware"/>.
         /// </summary>
         /// <param name="policy">The policy.</param>
-        /// <param name="inner">The inner handler which is responsible for processing the HTTP response messages.</param>
+        /// <param name="innerHandler">The inner handler which is responsible for processing the HTTP response messages.</param>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="policy"/> is <see langword="null"/></exception>
-        public PollyMessageMiddleware(IAsyncPolicy<HttpResponseMessage> policy, HttpMessageHandler inner) : base(inner) => 
-            _policy = policy ?? throw new ArgumentNullException(nameof(policy));
-
-        /// <summary>
-        /// Creates a new <see cref="PollyMessageMiddleware"/>.
-        /// </summary>
-        /// <param name="policy">The policy.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="policy"/> is <see langword="null"/></exception>
-        public PollyMessageMiddleware(IAsyncPolicy<HttpResponseMessage> policy) => 
-            _policy = policy ?? throw new ArgumentNullException(nameof(policy));
-
+        internal PollyMessageMiddleware(IAsyncPolicy<HttpResponseMessage> policy, HttpMessageHandler innerHandler) : base(innerHandler) => _policy = policy;
 
         /// <inheritdoc />
         /// <exception cref="T:System.ArgumentNullException"><paramref name="request"/> is <see langword="null"/></exception>
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
             return SendAsyncInternal(request, cancellationToken);
         }
 
@@ -52,7 +38,7 @@ namespace Simple.HttpClientFactory.MessageHandlers
                             await base.SendAsync(request, cancellationToken), context, cancellationToken)
                        .ContinueWith(t =>
                        {
-                           if(cleanUpContext)
+                           if (cleanUpContext)
                                request.SetPolicyExecutionContext(null);
                            return t.Result;
                        }, cancellationToken);

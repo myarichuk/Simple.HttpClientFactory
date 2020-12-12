@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using FakeItEasy;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
@@ -14,6 +15,9 @@ namespace Simple.HttpClientFactory.Tests
 {
     public class PolicyTests
     {
+        private const string _endpointUri = "/hello/world";
+        private const string _endpointUriTimeout = "/timeout";
+
 		private readonly WireMockServer _server;
 
 		public PolicyTests()
@@ -22,7 +26,7 @@ namespace Simple.HttpClientFactory.Tests
 
 			_server
 				.Given(Request.Create()
-					.WithPath("/hello/world")
+					.WithPath(_endpointUri)
 					.UsingGet())
 				.InScenario("Timeout-then-resolved")
 				.WillSetStateTo("Transient issue resolved")
@@ -31,7 +35,7 @@ namespace Simple.HttpClientFactory.Tests
 
 			_server
 				.Given(Request.Create()
-					.WithPath("/hello/world")
+					.WithPath(_endpointUri)
 					.UsingGet())
 				.InScenario("Timeout-then-resolved")
 				.WhenStateIs("Transient issue resolved")
@@ -43,16 +47,44 @@ namespace Simple.HttpClientFactory.Tests
 
 			_server
 				.Given(Request.Create()
-					.WithPath("/timeout")
+					.WithPath(_endpointUriTimeout)
 					.UsingGet())
 				.RespondWith(Response.Create()
 					.WithStatusCode(408));
         }
 
         [Fact]
+        public void Providing_null_policy_params_should_throw_argumentnullexception()
+        {
+            var exception = Assert.Throws<ArgumentNullException>(() => HttpClientFactory.Create().WithPolicy(null));
+            Assert.Equal("policies", exception.ParamName);
+        }
+
+        [Fact]
+        public void Providing_a_null_policy_should_throw_argumentnullexception()
+        {
+            var exception = Assert.Throws<ArgumentNullException>(() => HttpClientFactory.Create().WithPolicy(A.Fake<IAsyncPolicy<HttpResponseMessage>>(), null));
+            Assert.Equal("policy", exception.ParamName);
+        }
+
+        [Fact]
+        public void Providing_no_arguments_to_policy_should_throw_argumentexception()
+        {
+            var exception = Assert.Throws<ArgumentException>(() => HttpClientFactory.Create().WithPolicy());
+            Assert.Equal("policies", exception.ParamName);
+        }
+
+		[Fact]
+        public void Providing_a_null_policy_collection_should_throw_argumentnullexception()
+        {
+            var exception = Assert.Throws<ArgumentNullException>(() => HttpClientFactory.Create().WithPolicies(null));
+            Assert.Equal("policies", exception.ParamName);
+        }
+
+		[Fact]
 		public async Task Client_with_retry_and_timeout_policy_should_properly_apply_policies()
 		{
-			//timeout after 2 secons, then retry
+			//timeout after 2 seconds, then retry
 			var clientWithRetry = HttpClientFactory.Create()
 				.WithPolicy(
     					Policy<HttpResponseMessage>
@@ -62,7 +94,7 @@ namespace Simple.HttpClientFactory.Tests
 				.WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
 				.Build();
 
-			var responseWithTimeout = await clientWithRetry.GetAsync(_server.Urls[0] + "/timeout");
+			var responseWithTimeout = await clientWithRetry.GetAsync($"{_server.Urls[0]}{_endpointUriTimeout}");
 			Assert.Equal(4, _server.LogEntries.Count());
             Assert.Equal(HttpStatusCode.RequestTimeout, responseWithTimeout.StatusCode);
 		}
@@ -80,7 +112,7 @@ namespace Simple.HttpClientFactory.Tests
 							.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))))
 				.Build();
 
-			var response = await clientWithRetry.GetAsync(_server.Urls[0] + "/timeout");
+			var response = await clientWithRetry.GetAsync($"{_server.Urls[0]}{_endpointUriTimeout}");
 			Assert.Equal(4, _server.LogEntries.Count());
             Assert.Equal(HttpStatusCode.RequestTimeout, response.StatusCode);
 		}
@@ -91,7 +123,7 @@ namespace Simple.HttpClientFactory.Tests
 		{
 			var clientWithoutRetry = HttpClientFactory.Create().Build();
 
-			var responseWithTimeout = await clientWithoutRetry.GetAsync(_server.Urls[0] + "/hello/world");
+			var responseWithTimeout = await clientWithoutRetry.GetAsync($"{_server.Urls[0]}{_endpointUri}");
 
 			Assert.Single(_server.LogEntries);
 			Assert.True(_server.LogEntries.Count(entry => (int)entry.ResponseMessage.StatusCode == 408) == 1);
@@ -110,7 +142,7 @@ namespace Simple.HttpClientFactory.Tests
 						.WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
 				.Build();
 
-			var response = await clientWithRetry.GetAsync(_server.Urls[0] + "/hello/world");
+			var response = await clientWithRetry.GetAsync($"{_server.Urls[0]}{_endpointUri}");
             
 			Assert.Equal(2, _server.LogEntries.Count());
 			Assert.True(_server.LogEntries.Count(entry => (int)entry.ResponseMessage.StatusCode == 200) == 1);
