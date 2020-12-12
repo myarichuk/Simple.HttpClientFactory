@@ -24,6 +24,7 @@ jobs:
       run: dotnet test --no-restore --verbosity normal
     - name: Setup GitVersion
     - uses: actions/setup-gitversion@v1.0.0
+    - name: Run GitVersion
     - run: GitVersion
 
     
