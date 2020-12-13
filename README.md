@@ -22,7 +22,7 @@ public HttpClient CreateClient() =>
     HttpClientFactory.Create()
                      .WithCertificate(DefaultDevCert.Get())         // configure with one or more X509Certificate2 instances
                      .WithPolicy(Policy<HttpResponseMessage>.Handle<HttpRequestException>()
-                                                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                                                            .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                                                             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                      .Build();
 

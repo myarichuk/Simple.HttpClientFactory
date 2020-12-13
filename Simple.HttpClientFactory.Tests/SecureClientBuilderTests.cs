@@ -25,7 +25,7 @@ namespace Simple.HttpClientFactory.Tests
             _server.Given(Request.Create().WithPath(_endpointUri).UsingAnyMethod())
                    .RespondWith(
                        Response.Create()
-                          .WithStatusCode(200)
+                          .WithStatusCode(HttpStatusCode.OK)
                           .WithHeader("Content-Type", "text/plain")
                           .WithBody("Hello world!"));
         }
@@ -37,7 +37,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
     					Policy<HttpResponseMessage>
                             .Handle<HttpRequestException>()
-                            .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                            .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                        .RetryAsync(3))
                 .Build();
 

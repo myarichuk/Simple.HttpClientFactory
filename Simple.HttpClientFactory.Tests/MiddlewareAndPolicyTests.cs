@@ -32,7 +32,7 @@ namespace Simple.HttpClientFactory.Tests
                 .InScenario("Timeout-then-resolved")
                 .WillSetStateTo("Transient issue resolved")
                 .RespondWith(Response.Create()
-                    .WithStatusCode(408));
+                    .WithStatusCode(HttpStatusCode.RequestTimeout));
 
             _server
                 .Given(Request.Create()
@@ -42,7 +42,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WhenStateIs("Transient issue resolved")
                 .WillSetStateTo("All ok")
                 .RespondWith(Response.Create()
-                    .WithStatusCode(200)
+                    .WithStatusCode(HttpStatusCode.OK)
                     .WithHeader("Content-Type", "text/plain")
                     .WithBody("Hello world!"));
 
@@ -51,7 +51,7 @@ namespace Simple.HttpClientFactory.Tests
                     .WithPath(_endpointUriTimeout)
                     .UsingGet())
                 .RespondWith(Response.Create()
-                    .WithStatusCode(408));
+                    .WithStatusCode(HttpStatusCode.RequestTimeout));
         }
 
         [Fact]
@@ -64,8 +64,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
                     Policy<HttpResponseMessage>
                         .Handle<HttpRequestException>()
-                        .OrResult(result =>
-                            (int) result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                        .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithPolicy(
                     Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
@@ -99,8 +98,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
                     Policy<HttpResponseMessage>
                         .Handle<HttpRequestException>()
-                        .OrResult(result =>
-                            (int) result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                        .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithPolicy(
                     Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
@@ -137,8 +135,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
                     Policy<HttpResponseMessage>
                         .Handle<HttpRequestException>()
-                        .OrResult(result =>
-                            (int) result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                        .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithMessageHandler(eventMessageHandler)
                 .WithMessageHandler(trafficRecorderMessageHandler)
@@ -156,9 +153,10 @@ namespace Simple.HttpClientFactory.Tests
             Assert.True(raisedEvent.Arguments.Request.Headers.Contains("foobar"));
             Assert.Equal("foobar", raisedEvent.Arguments.Request.Headers.GetValues("foobar").FirstOrDefault());
             Assert.Single(trafficRecorderMessageHandler.Traffic);
+
             Assert.Equal(2, _server.LogEntries.Count());
-            Assert.True(_server.LogEntries.Count(entry => (int) entry.ResponseMessage.StatusCode == 200) == 1);
-            Assert.True(_server.LogEntries.Count(entry => (int) entry.ResponseMessage.StatusCode == 408) == 1);
+            Assert.Single(_server.LogEntries, le => (HttpStatusCode)le.ResponseMessage.StatusCode == HttpStatusCode.OK);
+            Assert.Single(_server.LogEntries, le => (HttpStatusCode)le.ResponseMessage.StatusCode == HttpStatusCode.RequestTimeout);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("Hello world!", await response.Content.ReadAsStringAsync());
@@ -172,8 +170,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
                     Policy<HttpResponseMessage>
                         .Handle<HttpRequestException>()
-                        .OrResult(result =>
-                            (int) result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                        .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithMessageHandler(eventMessageHandler)
                 .Build();
@@ -188,8 +185,8 @@ namespace Simple.HttpClientFactory.Tests
             var response = await responseTask;
 
             Assert.Equal(2, _server.LogEntries.Count());
-            Assert.True(_server.LogEntries.Count(entry => (int) entry.ResponseMessage.StatusCode == 200) == 1);
-            Assert.True(_server.LogEntries.Count(entry => (int) entry.ResponseMessage.StatusCode == 408) == 1);
+            Assert.Single(_server.LogEntries, le => (HttpStatusCode)le.ResponseMessage.StatusCode == HttpStatusCode.OK);
+            Assert.Single(_server.LogEntries, le => (HttpStatusCode)le.ResponseMessage.StatusCode == HttpStatusCode.RequestTimeout);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal("Hello world!", await response.Content.ReadAsStringAsync());
