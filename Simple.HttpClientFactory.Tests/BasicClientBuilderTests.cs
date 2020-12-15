@@ -27,7 +27,7 @@ namespace Simple.HttpClientFactory.Tests
             _server.Given(Request.Create().WithPath(_endpointUri).UsingAnyMethod())
                    .RespondWith(
                        Response.Create()
-                          .WithStatusCode(200)
+                          .WithStatusCode(HttpStatusCode.OK)
                           .WithHeader("Content-Type", "text/plain")
                           .WithBody("Hello world!"));
         }

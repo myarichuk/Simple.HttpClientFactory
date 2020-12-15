@@ -29,7 +29,7 @@ namespace Simple.HttpClientFactory.Tests
             _server.Given(Request.Create().WithPath(_endpointUri).UsingAnyMethod())
                 .RespondWith(
                     Response.Create()
-                        .WithStatusCode(200)
+                        .WithStatusCode(HttpStatusCode.OK)
                         .WithHeader("Content-Type", "text/plain")
                         .WithBody("Hello world!"));       
             
@@ -38,7 +38,7 @@ namespace Simple.HttpClientFactory.Tests
                     .WithPath(_endpointUriTimeout)
                     .UsingGet())
                 .RespondWith(Response.Create()
-                    .WithStatusCode(408));
+                    .WithStatusCode(HttpStatusCode.RequestTimeout));
         }
 
         public class TestException : Exception
@@ -85,7 +85,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
                     Policy<HttpResponseMessage>
                         .Handle<HttpRequestException>()
-                        .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                        .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
                 .Build();
@@ -106,7 +106,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
                     Policy<HttpResponseMessage>
                         .Handle<HttpRequestException>()
-                        .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                        .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
                 .Build();
@@ -146,7 +146,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
                     Policy<HttpResponseMessage>
                         .Handle<HttpRequestException>()
-                        .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                        .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
                 .Build();
@@ -164,7 +164,7 @@ namespace Simple.HttpClientFactory.Tests
                 .WithPolicy(
                     Policy<HttpResponseMessage>
                         .Handle<HttpRequestException>()
-                        .OrResult(result => (int)result.StatusCode >= 500 || result.StatusCode == HttpStatusCode.RequestTimeout)
+                        .OrResult(result => result.StatusCode >= HttpStatusCode.InternalServerError || result.StatusCode == HttpStatusCode.RequestTimeout)
                         .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1)))
                 .WithPolicy(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4), TimeoutStrategy.Optimistic))
                 .Build();
