@@ -1,6 +1,8 @@
 ﻿#if NETSTANDARD2_0
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -12,9 +14,9 @@ namespace Simple.HttpClientFactory.MessageHandlers
     //note: Easy.Common is licensed with MIT License (https://github.com/NimaAra/Easy.Common/blob/master/LICENSE)
     public class HttpClientHandlerEx : HttpClientHandler
     {
-        private readonly HashSet<UriCacheKey> _alreadySeenAddresses = new HashSet<UriCacheKey>();
+        private readonly ConcurrentDictionary<UriCacheKey, UriCacheKey> _alreadySeenAddresses = new ConcurrentDictionary<UriCacheKey, UriCacheKey>();
 
-        public IReadOnlyCollection<UriCacheKey> AlreadySeenAddresses => _alreadySeenAddresses;
+        public IReadOnlyCollection<UriCacheKey> AlreadySeenAddresses => _alreadySeenAddresses.Values.ToList().AsReadOnly();
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -30,22 +32,18 @@ namespace Simple.HttpClientFactory.MessageHandlers
 
         private void EnsureConnectionLeaseTimeout(Uri endpoint)
         {
-            if (!endpoint.IsAbsoluteUri) { return; }
-            
             var key = new UriCacheKey(endpoint);
-            lock (_alreadySeenAddresses)
-            {
-                if (_alreadySeenAddresses.Contains(key)) { return; }
 
-                ServicePointManager.FindServicePoint(endpoint)
-                    .ConnectionLeaseTimeout = (int)Constants.ConnectionLifeTime.TotalMilliseconds;
-                _alreadySeenAddresses.Add(key);
-            }
+            _alreadySeenAddresses.TryAdd(key, key);
+
+            ServicePointManager.FindServicePoint(endpoint).ConnectionLeaseTimeout = (int)Constants.ConnectionLifeTime.TotalMilliseconds;
         }
 
-        public struct UriCacheKey : IEquatable<UriCacheKey>
+        public readonly struct UriCacheKey : IEquatable<UriCacheKey>
         {
             private readonly Uri _uri;
+
+            public UriCacheKey(string uri) => _uri = new Uri(uri);
 
             public UriCacheKey(Uri uri) => _uri = uri;
 
@@ -58,8 +56,10 @@ namespace Simple.HttpClientFactory.MessageHandlers
             public static bool operator ==(UriCacheKey left, UriCacheKey right) => left.Equals(right);
 
             public static bool operator !=(UriCacheKey left, UriCacheKey right) => !left.Equals(right);
+
+
+            public override string ToString() => _uri.ToString();
         }
     }
-
 }
 #endif

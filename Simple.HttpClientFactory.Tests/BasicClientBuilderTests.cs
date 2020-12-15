@@ -18,18 +18,27 @@ namespace Simple.HttpClientFactory.Tests
     public sealed class BasicClientBuilderTests : IDisposable
     {
         private const string _endpointUri = "/hello/world";
+        private const string _endpointUri2 = "/hello/world2";
 
         private readonly WireMockServer _server;
 
         public BasicClientBuilderTests()
         {
             _server = WireMockServer.Start();
+
             _server.Given(Request.Create().WithPath(_endpointUri).UsingAnyMethod())
                    .RespondWith(
                        Response.Create()
                           .WithStatusCode(HttpStatusCode.OK)
                           .WithHeader("Content-Type", "text/plain")
                           .WithBody("Hello world!"));
+
+            _server.Given(Request.Create().WithPath(_endpointUri2).UsingAnyMethod())
+                .RespondWith(
+                    Response.Create()
+                        .WithStatusCode(HttpStatusCode.OK)
+                        .WithHeader("Content-Type", "text/plain")
+                        .WithBody("Hello world 2!"));
         }
 
 
@@ -141,17 +150,76 @@ namespace Simple.HttpClientFactory.Tests
 
 #if NET472
         [Fact]
-        public async Task HttpClient_will_cache_visited_urls()
+        public async Task HttpClientHandlerEx_should_cache_visited_url()
         {
             var baseUri = _server.Urls[0];
 
             var clientHandler = new HttpClientHandlerEx();
-            var client = HttpClientFactory.Create(baseUri).Build(clientHandler);
+            var client = HttpClientFactory.Create().Build(clientHandler);
 
-            _ = await client.GetAsync(_endpointUri);
+            _ = await client.GetAsync($"{baseUri}{_endpointUri}");
 
-            Assert.Single(clientHandler.AlreadySeenAddresses);
-            Assert.True(clientHandler.AlreadySeenAddresses.First() == new HttpClientHandlerEx.UriCacheKey(new Uri($"{baseUri}{_endpointUri}")));
+            var cachedUriKey = Assert.Single(clientHandler.AlreadySeenAddresses);
+            Assert.Equal(new HttpClientHandlerEx.UriCacheKey($"{baseUri}{_endpointUri}"), cachedUriKey);
+        }
+
+        [Fact]
+        public async Task UriCacheKey_equal_comparison()
+        {
+            var baseUri = _server.Urls[0];
+
+            var clientHandler = new HttpClientHandlerEx();
+            var client = HttpClientFactory.Create().Build(clientHandler);
+
+            _ = await client.GetAsync($"{baseUri}{_endpointUri}");
+
+            var cachedUriKey = Assert.Single(clientHandler.AlreadySeenAddresses);
+            Assert.True(new HttpClientHandlerEx.UriCacheKey($"{baseUri}{_endpointUri}") == cachedUriKey);
+        }
+
+        [Fact]
+        public async Task UriCacheKey_not_equal_comparison()
+        {
+            var baseUri = _server.Urls[0];
+
+            var clientHandler = new HttpClientHandlerEx();
+            var client = HttpClientFactory.Create().Build(clientHandler);
+
+            _ = await client.GetAsync($"{baseUri}{_endpointUri}");
+            _ = await client.GetAsync($"{baseUri}{_endpointUri2}");
+
+            Assert.Equal(2, clientHandler.AlreadySeenAddresses.Count);
+
+            var cachedUriKey = Assert.Single(clientHandler.AlreadySeenAddresses, uck => uck != new HttpClientHandlerEx.UriCacheKey($"{baseUri}{_endpointUri}"));
+            Assert.Equal(new HttpClientHandlerEx.UriCacheKey($"{baseUri}{_endpointUri2}"), cachedUriKey);
+        }
+
+        [Fact]
+        public void UriCacheKey_equal_comparison_object()
+        {
+            object uriCacheKeyObject = new HttpClientHandlerEx.UriCacheKey($"{_server.Urls[0]}{_endpointUri}");
+
+            Assert.True(new HttpClientHandlerEx.UriCacheKey($"{_server.Urls[0]}{_endpointUri}").Equals(uriCacheKeyObject));
+        }
+
+        [Fact]
+        public void UriCacheKey_not_equal_comparison_object()
+        {
+            object notUriCacheKeyObject = 0;
+
+            Assert.False(new HttpClientHandlerEx.UriCacheKey($"{_server.Urls[0]}{_endpointUri2}").Equals(notUriCacheKeyObject));
+        }
+
+        [Fact]
+        public void UriCacheKey_ToString()
+        {
+            Assert.Equal($"{_server.Urls[0]}{_endpointUri}", new HttpClientHandlerEx.UriCacheKey($"{_server.Urls[0]}{_endpointUri}").ToString());
+        }
+
+        [Fact]
+        public void Two_UriCacheKeys_created_with_a_string_vs_a_uri_should_be_equal()
+        {
+            Assert.Equal(new HttpClientHandlerEx.UriCacheKey($"{_server.Urls[0]}{_endpointUri}"), new HttpClientHandlerEx.UriCacheKey(new Uri($"{_server.Urls[0]}{_endpointUri}")));
         }
 #endif
 
