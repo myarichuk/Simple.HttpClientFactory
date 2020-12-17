@@ -3,6 +3,7 @@ using Polly;
 
 namespace Simple.HttpClientFactory
 {
+#pragma warning disable 1591
     public static class HttpMessageExtensions
     {
         private const string PolicyExecutionContextKey = "PolicyExecutionContext";
