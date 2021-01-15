@@ -6,6 +6,9 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Simple.HttpClientFactory
 {
+    /// <summary>
+    /// Defines a factory for producing pre-configured <see cref="HttpClient"/> instances.
+    /// </summary>
     public interface IHttpClientBuilder
     {
         /// <summary>
@@ -26,7 +29,7 @@ namespace Simple.HttpClientFactory
         /// <summary>
         /// Adds a collection of default headers to be sent with each request.
         /// </summary>
-        IHttpClientBuilder WithDefaultHeaders(IReadOnlyDictionary<string, string> headers);
+        IHttpClientBuilder WithDefaultHeaders(IDictionary<string, string> headers);
 
         /// <summary>
         /// Configures one or more SSL certificates to use.

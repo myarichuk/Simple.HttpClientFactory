@@ -5,7 +5,7 @@ using Polly;
 
 namespace Simple.HttpClientFactory.MessageHandlers
 {
-   public sealed class PollyMessageMiddleware : DelegatingHandler
+   internal sealed class PollyMessageMiddleware : DelegatingHandler
     {
         private readonly IAsyncPolicy<HttpResponseMessage> _policy;
 

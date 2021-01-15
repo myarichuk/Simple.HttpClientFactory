@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Simple.HttpClientFactory.MessageHandlers
 {
-    public sealed class ExceptionTranslatorRequestMiddleware : DelegatingHandler
+    internal sealed class ExceptionTranslatorRequestMiddleware : DelegatingHandler
     {
         private readonly Func<HttpRequestException, bool> _exceptionHandlingPredicate;
         private readonly Func<HttpRequestException, Exception> _exceptionHandler;

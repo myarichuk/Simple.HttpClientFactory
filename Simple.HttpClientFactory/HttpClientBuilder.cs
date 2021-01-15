@@ -1,14 +1,14 @@
-﻿using Polly;
+﻿using Simple.HttpClientFactory.MessageHandlers;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 #if NETCOREAPP2_1
 using System.Net.Security;
 #endif
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
-using Simple.HttpClientFactory.MessageHandlers;
 
 namespace Simple.HttpClientFactory
 {
@@ -50,7 +50,7 @@ namespace Simple.HttpClientFactory
             return this;
         }
 
-        public IHttpClientBuilder WithDefaultHeaders(IReadOnlyDictionary<string, string> headers)
+        public IHttpClientBuilder WithDefaultHeaders(IDictionary<string, string> headers)
         {
             if (headers == null) throw new ArgumentNullException(nameof(headers));
 
@@ -63,7 +63,7 @@ namespace Simple.HttpClientFactory
         private void WithCertificate(X509Certificate2 certificate)
         {
             if (certificate == null) throw new ArgumentNullException(nameof(certificate));
-
+            
             _certificates.Add(certificate);
         }
 
