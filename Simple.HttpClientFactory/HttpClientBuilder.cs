@@ -308,6 +308,20 @@ namespace Simple.HttpClientFactory
         private HttpClient CreateClientInternal<TPrimaryMessageHandler>(TPrimaryMessageHandler primaryMessageHandler, PollyMessageMiddleware rootPolicyHandler, DelegatingHandler lastMiddleware)
             where TPrimaryMessageHandler : HttpMessageHandler
         {
+            HttpClient createdClient;
+            if (rootPolicyHandler != null)
+                createdClient = InitializeClientWithPoliciesAndMiddleware();
+            else if (_middlewareHandlers.Count > 0)
+                createdClient = InitializeClientOnlyWithMiddleware();
+            else
+                createdClient = new HttpClient(primaryMessageHandler, true);
+
+            if (_baseUrl != null)
+                createdClient.BaseAddress = _baseUrl;
+
+            return createdClient;
+
+
             HttpClient InitializeClientWithPoliciesAndMiddleware()
             {
                 HttpClient client;
@@ -330,19 +344,6 @@ namespace Simple.HttpClientFactory
 
                 return client;
             }
-
-            HttpClient createdClient;
-            if (rootPolicyHandler != null)
-                createdClient = InitializeClientWithPoliciesAndMiddleware();
-            else if (_middlewareHandlers.Count > 0)
-                createdClient = InitializeClientOnlyWithMiddleware();
-            else
-                createdClient = new HttpClient(primaryMessageHandler, true);
-
-            if (_baseUrl != null)
-                createdClient.BaseAddress = _baseUrl;
-
-            return createdClient;
         }
     }
 }

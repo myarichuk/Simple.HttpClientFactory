@@ -89,14 +89,14 @@ namespace Simple.HttpClientFactory.MessageHandlers
             public override int GetHashCode() => HashCode.Combine(_uri.Scheme, _uri.DnsSafeHost, _uri.Port);
 
             /// <summary>
-            /// Determines whether two specified <see cref="UriCacheKey"></see> object are considered to be the same.
+            /// Determines whether two specified <see cref="UriCacheKey"></see> objects are considered to be the same.
             /// </summary>
             /// <param name="left">The first <see cref="UriCacheKey"></see> object to compare.</param>
             /// <param name="right">The second <see cref="UriCacheKey"></see> object to compare.</param>
             public static bool operator ==(UriCacheKey left, UriCacheKey right) => left.Equals(right);
 
             /// <summary>
-            /// Determines whether two specified <see cref="UriCacheKey"></see> object are considered to be different.
+            /// Determines whether two specified <see cref="UriCacheKey"></see> objects are considered to be different.
             /// </summary>
             /// <param name="left">The first <see cref="UriCacheKey"></see> object to compare.</param>
             /// <param name="right">The second <see cref="UriCacheKey"></see> object to compare.</param>
