@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-#if NETCOREAPP2_1
+#if NETCOREAPP2_1_OR_GREATER
 using System.Net.Security;
 #endif
 using System.Runtime.CompilerServices;
@@ -20,7 +20,7 @@ namespace Simple.HttpClientFactory
         private readonly List<IAsyncPolicy<HttpResponseMessage>> _policies = new List<IAsyncPolicy<HttpResponseMessage>>();
         private TimeSpan? _timeout;
         private readonly List<DelegatingHandler> _middlewareHandlers = new List<DelegatingHandler>();
-#if NETCOREAPP2_1
+#if NETCOREAPP2_1_OR_GREATER
         private Action<SocketsHttpHandler> _primaryMessageHandlerConfigurator;
 #else
         private Action<HttpClientHandler> _primaryMessageHandlerConfigurator;
@@ -154,7 +154,7 @@ namespace Simple.HttpClientFactory
                                                               EventHandler<HttpRequestException> requestExceptionEventHandler = null,
                                                               EventHandler<Exception> transformedRequestExceptionEventHandler = null) => WithMessageHandler(new ExceptionTranslatorRequestMiddleware(exceptionHandlingPredicate, exceptionHandler, requestExceptionEventHandler, transformedRequestExceptionEventHandler));
 
-#if NETCOREAPP2_1
+#if NETCOREAPP2_1_OR_GREATER
 
         public IHttpClientBuilder WithPrimaryMessageHandlerConfigurator(Action<SocketsHttpHandler> configurator)
         {
@@ -204,17 +204,16 @@ namespace Simple.HttpClientFactory
                     ClientCertificates = new X509CertificateCollection()
                 };
 
-                for (int i = 0; i < _certificates.Count; i++)
-                    primaryMessageHandler.SslOptions.ClientCertificates.Add(_certificates[i]);
+                primaryMessageHandler.SslOptions.ClientCertificates.AddRange(_certificates.Cast<X509Certificate>().ToArray());
             }
 
-            for (int i = 0; i < _policies.Count; i++)
+            foreach (var policy in _policies)
             {
                 if (rootPolicyHandler == null)
-                    rootPolicyHandler = new PollyMessageMiddleware(_policies[i], primaryMessageHandler);
+                    rootPolicyHandler = new PollyMessageMiddleware(policy, primaryMessageHandler);
                 else
                 {
-                    var @new = new PollyMessageMiddleware(_policies[i], rootPolicyHandler);
+                    var @new = new PollyMessageMiddleware(policy, rootPolicyHandler);
                     rootPolicyHandler = @new;
                 }
             }
